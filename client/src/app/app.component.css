@@ -1,0 +1,10 @@
+#ts-container {
+    background-color: #3D3D3D;
+    color: #FFF;
+    border-radius: 7px;
+    height: 400px;
+}
+
+#ts-status i:first-child {
+    color: green;
+}

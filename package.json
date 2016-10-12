@@ -1,0 +1,8 @@
+{
+  "name": "ng2-thermostat",
+  "description": "Node JS thermostat with an Angular 2 front end",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "fdafs"
+  }
+}
