@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build-serve",
+    "start": "npm run serve",
     "build": "tsc",
     "test": "mocha src/core",
     "build-test": "npm run build && npm test",
