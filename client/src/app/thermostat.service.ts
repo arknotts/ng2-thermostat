@@ -27,12 +27,12 @@ export class ThermostatService {
 		});
 	}
 
-	events(): Observable<any> {
+	get events$(): Observable<any> {
 		return Observable.create((observer: Observer<any>) => {
 			this.socket.on('message', (message) => {
 				observer.next(message);
 			});
-		});
+		}).map((e: any) => JSON.parse(e));
 	}
 
 	init() {
@@ -41,6 +41,10 @@ export class ThermostatService {
 
 	start() {
 		this.socket.emit('/start', {});
+	}
+
+	reset() {
+		this.socket.emit('/reset', {});
 	}
 
 	setTarget(target: number) {
@@ -53,5 +57,21 @@ export class ThermostatService {
 		this.socket.emit('/mode', {
 			mode: mode
 		});
+	}
+
+	get temperature$(): Observable<number> {
+		return this.events$.filter((event: any) => {
+								return event.topic && event.topic.join('/') == 'sensors/temperature/thermostat';
+							}).map((event: any): number => {
+								return parseFloat(event.message)
+							});
+	}
+
+	get status$(): Observable<string> {
+		return this.events$.filter((event: any) => {
+								return event.topic && event.topic.join('/') == 'thermostat/status';
+							}).map((event: any): string => {
+								return event.message
+							});
 	}
 }

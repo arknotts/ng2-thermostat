@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { environment } from '../environments/environment';
 
 import { ThermostatService } from './thermostat.service';
 
@@ -12,32 +13,26 @@ export class AppComponent implements OnInit {
 	title = '';
 	targetDelta$: Subject<number>;
 	displayTarget$: Observable<number>;
-	temperature$: Observable<number>;
   pending: boolean;
 	thermostatService: ThermostatService;
+	temperature$: Observable<number>;
+	status$: Observable<string>;
 
 	constructor(thermostatService: ThermostatService) {
 		this.thermostatService = thermostatService;
     this.pending = false;
-		let events = this.thermostatService.events();
+		this.temperature$ = this.thermostatService.temperature$;
+		this.status$ = this.thermostatService.status$;
 
-		this.temperature$ = events.map((e: any) => JSON.parse(e))
-		.filter((event: any) => {
-			if(event.topic) {
-				console.log(event.topic.join('/'));
-			}
-			return event.topic && event.topic.join('/') == 'sensors/temperature/thermostat';
-		}).map((event: any): number => {
-			return parseFloat(event.message)
-		});
-
-		events.subscribe((message) => {
-			console.log(message);
-		});
+		if(!environment.production) {
+			//log all events to console for debugging
+			this.thermostatService.events$.subscribe((message) => {
+				console.log(message);
+			});
+		}
 
 		this.targetDelta$ = new Subject<number>();
 		this.displayTarget$ = this.targetDelta$.scan((acc, val) => acc+val);
-
 		this.displayTarget$.debounceTime(3000)
 						.subscribe((target: number) => {
               this.thermostatService.setTarget(target)
@@ -51,6 +46,12 @@ export class AppComponent implements OnInit {
 	}
 
 	start() {
+		this.thermostatService.start();
+	}
+
+	reset() {
+		this.thermostatService.reset();
+		this.thermostatService.init();
 		this.thermostatService.start();
 	}
 
