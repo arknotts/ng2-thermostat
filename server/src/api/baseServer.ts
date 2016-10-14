@@ -51,6 +51,11 @@ export abstract class BaseServer {
             let furnaceTrigger: ITrigger = this.buildFurnaceTrigger();
             let acTrigger: ITrigger = this.buildAcTrigger();
 
+            //don't create duplicate thermostat instances
+            if(this.thermostat) {
+                this.reset();
+            }
+
             this.thermostat = new Thermostat(configuration, tempReader, furnaceTrigger, acTrigger);
 
 			this.thermostat.eventStream.subscribe((e: IThermostatEvent) => {
@@ -61,8 +66,7 @@ export abstract class BaseServer {
 
     postThermostatInitRoutes() {
         this.router.on('/reset', (socket: any, args: any, next: any) => {
-            this.thermostat.stop();
-            this.thermostat = null;
+            this.reset();
         });
 
         this.router.use((socket: any, args: any, next: any) => {
@@ -108,6 +112,13 @@ export abstract class BaseServer {
 				socket.emit(args.shift(), { mode: this.thermostat.mode });
 			}
         });
+    }
+
+    reset() {
+        if(this.thermostat) {
+            this.thermostat.stop();
+            this.thermostat = null;
+        }
     }
     
     listen() {
