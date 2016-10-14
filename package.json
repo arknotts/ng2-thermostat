@@ -3,6 +3,9 @@
   "description": "Node JS thermostat with an Angular 2 front end",
   "version": "1.0.0",
   "scripts": {
-    "start": "fdafs"
+    "start": "concurrently \"cd server && npm start\" \"cd client && npm start\""
+  },
+  "devDependencies": {
+    "concurrently": "^3.1.0"
   }
 }
