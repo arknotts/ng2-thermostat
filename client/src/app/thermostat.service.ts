@@ -19,20 +19,33 @@ export enum ThermostatMode {
 @Injectable()
 export class ThermostatService {
 	socket: SocketIOClient.Socket;
+	events$: Observable<any>;
+
+	temperature$: Observable<number>;
+	status$: Observable<string>;
 
 	constructor() {
 		this.socket = io(`localhost:${PORT}`).connect();
 		this.socket.on('connect', () => {
 			console.log(`connected on port ${PORT}`);
 		});
-	}
 
-	get events$(): Observable<any> {
-		return Observable.create((observer: Observer<any>) => {
-			this.socket.on('message', (message) => {
-				observer.next(message);
-			});
+		this.events$ = Observable.create((observer: Observer<any>) => {
+			this.socket.on('message', (message) => observer.next(message));
 		}).map((e: any) => JSON.parse(e));
+
+		//TODO share data structure between server/client so string matching isn't necessary
+		this.temperature$ = this.events$.filter((event: any) => {
+								return event.topic && event.topic.join('/') == 'sensors/temperature/thermostat';
+							}).map((event: any): number => {
+								return parseFloat(event.message)
+							});
+
+		this.status$ = this.events$.filter((event: any) => {
+								return event.topic && event.topic.join('/') == 'thermostat/status';
+							}).map((event: any): string => {
+								return event.message
+							});
 	}
 
 	init() {
@@ -57,21 +70,5 @@ export class ThermostatService {
 		this.socket.emit('/mode', {
 			mode: mode
 		});
-	}
-
-	get temperature$(): Observable<number> {
-		return this.events$.filter((event: any) => {
-								return event.topic && event.topic.join('/') == 'sensors/temperature/thermostat';
-							}).map((event: any): number => {
-								return parseFloat(event.message)
-							});
-	}
-
-	get status$(): Observable<string> {
-		return this.events$.filter((event: any) => {
-								return event.topic && event.topic.join('/') == 'thermostat/status';
-							}).map((event: any): string => {
-								return event.message
-							});
 	}
 }

@@ -11,19 +11,25 @@ import { ThermostatService } from './thermostat.service';
 })
 export class AppComponent implements OnInit {
 	title = '';
+
 	targetDelta$: Subject<number>;
 	displayTarget$: Observable<number>;
-  pending: boolean;
-	thermostatService: ThermostatService;
-	temperature$: Observable<number>;
+	finalTarget$: Observable<number>;
+
 	status$: Observable<string>;
 
-	constructor(thermostatService: ThermostatService) {
-		this.thermostatService = thermostatService;
-    this.pending = false;
-		this.temperature$ = this.thermostatService.temperature$;
-		this.status$ = this.thermostatService.status$;
+	constructor(private thermostatService: ThermostatService) {
 
+		this.targetDelta$ = new Subject<number>();
+		this.displayTarget$ = this.targetDelta$.scan((acc, val) => acc+val);
+		this.finalTarget$ = this.displayTarget$.debounceTime(3000);
+		
+		this.status$ = this.thermostatService.status$
+							.merge(this.displayTarget$.map(() => 'pending'))
+							.merge(this.finalTarget$.map(() => 'ready'));
+	}
+
+	ngOnInit() {
 		if(!environment.production) {
 			//log all events to console for debugging
 			this.thermostatService.events$.subscribe((message) => {
@@ -31,18 +37,12 @@ export class AppComponent implements OnInit {
 			});
 		}
 
-		this.targetDelta$ = new Subject<number>();
-		this.displayTarget$ = this.targetDelta$.scan((acc, val) => acc+val);
-		this.displayTarget$.debounceTime(3000)
-						.subscribe((target: number) => {
-              this.thermostatService.setTarget(target)
-              this.pending = false;
-            });
-	}
+		this.finalTarget$.subscribe((target: number) => {
+			this.thermostatService.setTarget(target)
+		});
 
-	ngOnInit() {
 		this.thermostatService.init();
-    this.thermostatService.start();
+    	this.thermostatService.start();
 	}
 
 	start() {
@@ -61,11 +61,9 @@ export class AppComponent implements OnInit {
 
 	targetUp() {
 		this.targetDelta$.next(1);
-    this.pending = true;
 	}
 
 	targetDown() {
 		this.targetDelta$.next(-1);
-    this.pending = true;
 	}
 }
