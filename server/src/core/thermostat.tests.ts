@@ -3,12 +3,14 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 var expect = chai.expect;
 
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, Dht11TempSensor } from './tempSensor';
 import { Thermostat } from './thermostat';
-import { IThermostatConfiguration, ThermostatConfiguration, ThermostatMode, ITempSensorConfiguration, TempSensorConfiguration } from './configuration';
+import { IThermostatConfiguration, ThermostatConfiguration, ITempSensorConfiguration, TempSensorConfiguration } from './configuration';
 import { ITrigger, FurnaceTrigger, AcTrigger } from './trigger';
-import { IThermostatEvent } from './thermostatEvent';
+import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
 
 describe('Thermostat Unit Tests:', () => {
 

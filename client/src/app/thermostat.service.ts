@@ -2,12 +2,11 @@ import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
 import * as io from 'socket.io-client';
 
-const PORT:number = 3000;
+import { ThermostatMode } from '../../../common/thermostatMode';
 
-export enum ThermostatMode {
-	Heating,
-	Cooling
-}
+import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
+
+const PORT:number = 3000;
 
 // export interface IThermostatService {
 // 	init();
@@ -19,10 +18,11 @@ export enum ThermostatMode {
 @Injectable()
 export class ThermostatService {
 	socket: SocketIOClient.Socket;
-	events$: Observable<any>;
+	events$: Observable<IThermostatEvent>;
 
 	temperature$: Observable<number>;
 	status$: Observable<string>;
+	error$: Observable<string>;
 
 	constructor() {
 		this.socket = io(`localhost:${PORT}`).connect();
@@ -30,22 +30,26 @@ export class ThermostatService {
 			console.log(`connected on port ${PORT}`);
 		});
 
-		this.events$ = Observable.create((observer: Observer<any>) => {
+		this.events$ = Observable.create((observer: Observer<IThermostatEvent>) => {
 			this.socket.on('message', (message) => observer.next(message));
-		}).map((e: any) => JSON.parse(e));
+		});
 
 		//TODO share data structure between server/client so string matching isn't necessary
-		this.temperature$ = this.events$.filter((event: any) => {
+		this.temperature$ = this.events$.filter((event: IThermostatEvent) => {
 								return event.topic && event.topic.join('/') == 'sensors/temperature/thermostat';
 							}).map((event: any): number => {
 								return parseFloat(event.message)
 							});
 
-		this.status$ = this.events$.filter((event: any) => {
+		this.status$ = this.events$.filter((event: IThermostatEvent) => {
 								return event.topic && event.topic.join('/') == 'thermostat/status';
 							}).map((event: any): string => {
 								return event.message
 							});
+							
+		this.error$ = this.events$.filter((event: IThermostatEvent) => {
+								return event.type == ThermostatEventType.Error;
+							}).map((event: IThermostatEvent) => event.message);
 	}
 
 	init() {

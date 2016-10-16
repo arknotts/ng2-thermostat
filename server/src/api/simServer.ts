@@ -1,8 +1,10 @@
 import fs = require('fs');
 import path = require('path');
 
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 import { BaseServer } from './baseServer';
-import { IThermostatConfiguration, ITempSensorConfiguration, ThermostatMode } from '../core/configuration';
+import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
 import { ITempSensor } from '../core/tempSensor';
 import { ITrigger } from '../core/trigger';

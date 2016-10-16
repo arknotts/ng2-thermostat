@@ -1,3 +1,5 @@
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 export interface ITempSensorConfiguration {
     TemperatureSensorPollDelay: number;
 }
@@ -12,11 +14,6 @@ export interface IThermostatConfiguration {
     TempSensorConfiguration: ITempSensorConfiguration;
 
     TempEmitDelay: number;
-}
-
-export enum ThermostatMode {
-    Heating,
-    Cooling
 }
 
 export class ThermostatConfiguration implements IThermostatConfiguration {

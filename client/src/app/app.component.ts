@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../environments/environment';
 
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 import { ThermostatService } from './thermostat.service';
 
 @Component({
@@ -25,35 +27,43 @@ export class AppComponent implements OnInit {
 		this.finalTarget$ = this.displayTarget$.debounceTime(3000);
 		
 		this.status$ = this.thermostatService.status$
+							.merge(this.thermostatService.error$)
 							.merge(this.displayTarget$.map(() => 'pending'))
 							.merge(this.finalTarget$.map(() => 'ready'));
+							
+		this.thermostatService.error$.subscribe((err: string) => {
+			console.log('got err', err);
+		});
 	}
 
 	ngOnInit() {
 		if(!environment.production) {
 			//log all events to console for debugging
-			this.thermostatService.events$.subscribe((message) => {
-				console.log(message);
+			this.thermostatService.events$.subscribe((event) => {
+				console.log(event);
 			});
 		}
 
 		this.finalTarget$.subscribe((target: number) => {
-			this.thermostatService.setTarget(target)
+			this.thermostatService.setTarget(target);
 		});
 
 		this.thermostatService.init();
     	this.thermostatService.start();
 	}
-
-	start() {
-		this.thermostatService.start();
-	}
-
-	reset() {
+	
+	onModeToggled(e) {
 		this.thermostatService.reset();
-		this.thermostatService.init();
-		this.thermostatService.start();
+		let mode = e.value == 'heat' ? ThermostatMode.Heating : 
+				   e.value == 'cool' ? ThermostatMode.Cooling : null;
+		
+		if(mode != null) {
+			this.thermostatService.init();
+			this.thermostatService.setMode(mode);	
+			this.thermostatService.start();
+		}
 	}
+
 
 	ngAfterViewInit() {
 		this.targetDelta$.next(70);

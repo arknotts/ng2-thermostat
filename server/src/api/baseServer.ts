@@ -1,12 +1,14 @@
 import express = require('express');
 import bodyParser = require('body-parser');
 
+import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 import { Thermostat } from '../core/thermostat';
-import { IThermostatConfiguration, ITempSensorConfiguration, ThermostatMode } from '../core/configuration';
+import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
 import { ITempReader } from '../core/tempReader';
 import { ITempSensor } from '../core/tempSensor';
 import { ITrigger } from '../core/trigger';
-import { IThermostatEvent } from '../core/thermostatEvent';
 
 const serverPort: number = 3000;
 
@@ -58,8 +60,8 @@ export abstract class BaseServer {
 
             this.thermostat = new Thermostat(configuration, tempReader, furnaceTrigger, acTrigger);
 
-			this.thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-				this.io.sockets.send(JSON.stringify(e));
+			this.thermostat.eventStream.subscribe((e) => {
+				this.io.sockets.send(e);
 			});
 		});
     }
@@ -74,7 +76,7 @@ export abstract class BaseServer {
                 next();
             }
             else {
-                socket.emit('err', { error: 'Thermostat must be initialized first!' });
+				this.emitError('Thermostat must be initialized first!');
             }
         });
 
@@ -100,7 +102,7 @@ export abstract class BaseServer {
         this.router.on('/mode', (socket: any, args: any, next: any) => {
 			let payload = args[1];
 			if(payload) {
-				if(payload.mode) {
+				if(payload.mode != null) {
 					let newMode = (<any>ThermostatMode)[payload.mode];
 					this.thermostat.setMode(newMode);
 				}
@@ -112,7 +114,19 @@ export abstract class BaseServer {
 				socket.emit(args.shift(), { mode: this.thermostat.mode });
 			}
         });
+
+		this.router.on((err, socket, args, next) => {
+			this.emitError(err);
+		})
     }
+	
+	emitError(error: string) {
+		this.io.sockets.send(<IThermostatEvent>{
+			type: ThermostatEventType.Error,
+			topic: ThermostatTopic.Error,
+			message: error,
+		});
+	}
 
     reset() {
         if(this.thermostat) {

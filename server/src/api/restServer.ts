@@ -1,6 +1,8 @@
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 import { BaseServer } from './baseServer';
 import { ITrigger, FurnaceTrigger, AcTrigger } from '../core/trigger';
-import { IThermostatConfiguration, ITempSensorConfiguration, ThermostatMode } from '../core/configuration';
+import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
 import { ITempSensor, Dht11TempSensor } from '../core/tempSensor';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
 

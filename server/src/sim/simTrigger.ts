@@ -7,12 +7,12 @@ export class SimTrigger implements ITrigger {
 	}
 
 	start() {
-		this._io.sockets.emit('Trigger started');
+		//this._io.sockets.emit('Trigger started');
 		this._simTempSensor.tempChangePerSecond = -this._simTempSensor.tempChangePerSecond;
 	}
 
 	stop() {
-		this._io.sockets.emit('Trigger stopped');
+		//this._io.sockets.emit('Trigger stopped');
 		this._simTempSensor.tempChangePerSecond = -this._simTempSensor.tempChangePerSecond;
 	}
 }

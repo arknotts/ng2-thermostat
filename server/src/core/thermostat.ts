@@ -1,11 +1,13 @@
 import Rx = require('rxjs');
 
+import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
+import { ThermostatMode } from '../../../common/thermostatMode';
+
 import { ITempReader } from './tempReader';
-import { IThermostatConfiguration, ThermostatMode } from './configuration';
+import { IThermostatConfiguration } from './configuration';
 import { MovingAverageTempReader } from './tempReader';
 import { Dht11TempSensor } from './tempSensor';
 import { ITrigger } from './trigger';
-import { IThermostatEvent, ThermostatEventType } from './thermostatEvent';
 
 export class Thermostat {
 
@@ -27,7 +29,7 @@ export class Thermostat {
 		this._eventObservers = [];
         this.eventStream = Rx.Observable.create((observer: Rx.Observer<IThermostatEvent>) => {
             this._eventObservers.push(observer);
-			this.emitStatusEvent('Initialized');
+			this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Initialized');
         }); 
     }
 
@@ -44,13 +46,14 @@ export class Thermostat {
             () => { this.emitComplete(); }
         );
 
-		this.emitStatusEvent('Started');
+		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Started');
 
         return this.eventStream;
     }
 
     stop() {
         this._tempReader.stop();
+		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Stopped');
     }
 
     private tryStartTrigger(temp: number) {
@@ -83,7 +86,7 @@ export class Thermostat {
             }
         }
 
-        this.emitTemperatureEvent(temp);
+        this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Temperature, temp.toString());
     }
 
     private startTrigger() {
@@ -121,7 +124,7 @@ export class Thermostat {
                 }
             }
 
-            this.emitTargetEvent(target);
+            this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Target, target.toString());
         }
     }
 
@@ -133,6 +136,7 @@ export class Thermostat {
         this.configuration.Mode = mode;
         this.setTarget(this.configuration.DefaultTarget);
         this._currentTrigger = mode == ThermostatMode.Heating ? this._furnaceTrigger : this._acTrigger;
+		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Mode, mode.toString());
     }
 
     get tempReader(): ITempReader {
@@ -148,45 +152,21 @@ export class Thermostat {
     }
 
     private emitTriggerEvent(start: boolean) {
-        let topic = ['thermostat'];
-        topic.push(this.configuration.Mode == ThermostatMode.Heating ? 'furnace' : 'ac');
+        let topic = this.configuration.Mode == ThermostatMode.Heating ? 
+							ThermostatTopic.Furnace : ThermostatTopic.Ac;
         let value = start ? 'on' : 'off';
 
-        this.emitEvent(<IThermostatEvent>{
-            type: ThermostatEventType.Message,
-            topic: topic,
-            message: value
-        });
+        this.emitEvent(ThermostatEventType.Message, topic, value);
     }
 
-    private emitTemperatureEvent(temperature: number) {
-        this.emitEvent(<IThermostatEvent>{
-            type: ThermostatEventType.Message,
-            topic: ['sensors', 'temperature', 'thermostat'],
-            message: temperature.toString()
-        });
-    }
-
-    private emitTargetEvent(target: number) {
-        this.emitEvent(<IThermostatEvent>{
-            type: ThermostatEventType.Message,
-            topic: ['thermostat', 'target'],
-            message: target.toString()
-        });
-    }
-
-	private emitStatusEvent(message: string) {
-        this.emitEvent(<IThermostatEvent>{
-            type: ThermostatEventType.Message,
-            topic: ['thermostat', 'status'],
-            message: message
-        });
-    }
-
-    private emitEvent(event: IThermostatEvent) {
+    private emitEvent(type: ThermostatEventType, topic: Array<string>, message: string) {
         if(this._eventObservers) {
             this._eventObservers.forEach((observer) => {
-				observer.next(event);
+				observer.next({
+					type: type,
+					topic: topic,
+					message: message	
+				});
 			});
         }
     }
