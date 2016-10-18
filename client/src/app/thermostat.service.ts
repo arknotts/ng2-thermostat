@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
 import * as io from 'socket.io-client';
+import * as _ from 'lodash';
 
 import { ThermostatMode } from '../../../common/thermostatMode';
 
-import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
+import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
 
 const PORT:number = 3000;
 
@@ -34,22 +35,14 @@ export class ThermostatService {
 			this.socket.on('message', (message) => observer.next(message));
 		});
 
-		//TODO share data structure between server/client so string matching isn't necessary
-		this.temperature$ = this.events$.filter((event: IThermostatEvent) => {
-								return event.topic && event.topic.join('/') == 'sensors/temperature/thermostat';
-							}).map((event: any): number => {
-								return parseFloat(event.message)
-							});
+		this.temperature$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Temperature))
+										.map((event: IThermostatEvent): number => parseFloat(event.message));
 
-		this.status$ = this.events$.filter((event: IThermostatEvent) => {
-								return event.topic && event.topic.join('/') == 'thermostat/status';
-							}).map((event: any): string => {
-								return event.message
-							});
+		this.status$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Status))
+									.map((event: IThermostatEvent): string => event.message);
 							
-		this.error$ = this.events$.filter((event: IThermostatEvent) => {
-								return event.type == ThermostatEventType.Error;
-							}).map((event: IThermostatEvent) => event.message);
+		this.error$ = this.events$.filter((event: IThermostatEvent) => event.type == ThermostatEventType.Error)
+									.map((event: IThermostatEvent) => event.message);
 	}
 
 	init() {
