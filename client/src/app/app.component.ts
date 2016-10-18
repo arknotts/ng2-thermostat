@@ -52,14 +52,14 @@ export class AppComponent implements OnInit {
     	this.thermostatService.start();
 	}
 	
-	onModeToggled(e) {
+	setMode(mode: string) {
 		this.thermostatService.reset();
-		let mode = e.value == 'heat' ? ThermostatMode.Heating : 
-				   e.value == 'cool' ? ThermostatMode.Cooling : null;
+		let thermostatMode = mode == 'heat' ? ThermostatMode.Heating : 
+				   			 mode == 'cool' ? ThermostatMode.Cooling : null;
 		
-		if(mode != null) {
+		if(thermostatMode != null) {
 			this.thermostatService.init();
-			this.thermostatService.setMode(mode);	
+			this.thermostatService.setMode(thermostatMode);	
 			this.thermostatService.start();
 		}
 	}

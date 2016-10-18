@@ -1,21 +1,14 @@
-
 <div id="ts-container" class="row">
-  <div class="col-xs-4">
+  <div class="col-md-4">
     <!--<h3>Thermostat</h3>-->
-	
-	<md-button-toggle-group (change)="onModeToggled($event)">
-		<md-button-toggle value="0">Off</md-button-toggle>
-		<md-button-toggle value="heat">Heat</md-button-toggle>
-		<md-button-toggle value="cool">Cool</md-button-toggle>
-	</md-button-toggle-group>
-	
-	Off <md-slide-toggle (change)="onOffToggled($event)"></md-slide-toggle> On
-	<md-slide-toggle (change)="onModeToggled($event)">Heat/Cool</md-slide-toggle>
 
-	<input type="checkbox" checked data-toggle="toggle">
+    
+
+    
     <h2>{{thermostatService.temperature$ | async | number:'1.0-1'}}º</h2>
   </div>
-  <div class="col-xs-4">
+
+  <div class="col-md-4">
     <h1 id="ts-status">
       <span class="fa-stack fa-lg" [ngSwitch]="status$ | async">
         <i *ngSwitchDefault class="fa fa-circle fa-stack-2x text-success"></i>
@@ -24,9 +17,15 @@
       </span>
     </h1>
     <h3>{{status$ | async}}</h3>
-    <button (click)="thermostatService.reset()" class="btn btn-primary">Reset</button>
+    <br>
+    <div class="btn-group center-block" role="group">
+      <button type="button" class="btn btn-default" (click)="setMode('cool')">Cool</button>
+      <button type="button" class="btn btn-default" (click)="setMode('off')">Off</button>
+      <button type="button" class="btn btn-default" (click)="setMode('heat')">Heat</button>
+    </div>
   </div>
-  <div class="col-xs-4">
+
+  <div class="col-md-4">
     <h1 (click)="targetUp()"><i class="fa fa-chevron-up"></i></h1>
     <h2>{{displayTarget$ | async}}</h2>
     <h1 (click)="targetDown()"><i class="fa fa-chevron-down"></i></h1>    
