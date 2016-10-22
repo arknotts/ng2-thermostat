@@ -6,7 +6,10 @@ export interface ITrigger {
 }
 
 export class PiGpioTrigger implements ITrigger {
-    constructor(private _outPin: number) {
+
+    // A lot of relays are inverted (turn on when given a LOW signal).
+    // If yours is not set _invertRelay to false.
+    constructor(private _outPin: number, private _invertRelay: boolean = true) {
         gpio.setup(_outPin, gpio.DIR_OUT, (err) => {
             if(err) throw `Error connecting to pin ${_outPin}: ${err}`;
         });
@@ -19,11 +22,13 @@ export class PiGpioTrigger implements ITrigger {
     }
 
     start() {
-        this.writeToPin(true);
+        let val = this._invertRelay ? false : true;
+        this.writeToPin(val);
     }
 
     stop() {
-        this.writeToPin(false);
+        let val = this._invertRelay ? true : false;
+        this.writeToPin(val);
     }
 }
 
