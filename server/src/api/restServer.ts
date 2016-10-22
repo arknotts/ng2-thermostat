@@ -6,6 +6,8 @@ import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/conf
 import { ITempSensor, Dht11TempSensor } from '../core/tempSensor';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
 
+const PIN_TEMP_SENSOR = 15;
+
 export class RestServer extends BaseServer {
 
 	constructor() {
@@ -47,7 +49,7 @@ export class RestServer extends BaseServer {
     }
 
 	buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader {
-        let tempSensor: ITempSensor = new Dht11TempSensor(tempSensorConfiguration);
+        let tempSensor: ITempSensor = new Dht11TempSensor(tempSensorConfiguration, PIN_TEMP_SENSOR);
         return new MovingAverageTempReader(tempSensor, 5);
     }
 

@@ -2,7 +2,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
-import { ITempSensor, Dht11TempSensor } from './tempSensor';
+import { ITempSensor, MockTempSensor } from './tempSensor';
 import { ITempSensorConfiguration, TempSensorConfiguration } from './configuration';
 
 var expect = chai.expect;
@@ -17,7 +17,7 @@ describe('Moving Average Temp Reader Unit Tests:', () => {
 
     beforeEach(function() {
         tempSensorCfg = new TempSensorConfiguration(1);
-        tempSensor = new Dht11TempSensor(tempSensorCfg);
+        tempSensor = new MockTempSensor(tempSensorCfg);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
     });
 

@@ -6,7 +6,7 @@ var expect = chai.expect;
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
-import { ITempSensor, Dht11TempSensor } from './tempSensor';
+import { ITempSensor, MockTempSensor } from './tempSensor';
 import { Thermostat } from './thermostat';
 import { IThermostatConfiguration, ThermostatConfiguration, ITempSensorConfiguration, TempSensorConfiguration } from './configuration';
 import { ITrigger, FurnaceTrigger, AcTrigger } from './trigger';
@@ -37,7 +37,7 @@ describe('Thermostat Unit Tests:', () => {
         tempSensorCfg = new TempSensorConfiguration(tickDelay);
         cfg = new ThermostatConfiguration(heatingRange, coolingRange, ThermostatMode.Heating, 1, 2000, 5, tempSensorCfg, 5000);
 
-        tempSensor = new Dht11TempSensor(tempSensorCfg);
+        tempSensor = new MockTempSensor(tempSensorCfg);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
         furnaceTrigger = new FurnaceTrigger();
         acTrigger = new AcTrigger();

@@ -1,4 +1,5 @@
 import Rx = require('rxjs');
+var dht = require('node-dht-sensor');
 
 import { ITempSensorConfiguration } from './configuration';
 
@@ -42,6 +43,23 @@ export abstract class BaseTempSensor implements ITempSensor {
 
 export class Dht11TempSensor extends BaseTempSensor {
 
+    constructor(_configuration: ITempSensorConfiguration, private _gpioPin: number) {
+        super(_configuration);
+
+        if(!dht.initialize(11, _gpioPin)) {
+            throw 'Error initializing DHT11 temperature sensor';
+        }
+
+    }
+
+    pollSensor(): number {
+        let rawValue = dht.read();
+        //let humidity = rawValue.humidity.toFixed(2); //TODO 
+        return rawValue.temperature.toFixed(2);
+    }
+}
+
+export class MockTempSensor extends BaseTempSensor {
     constructor(_configuration: ITempSensorConfiguration) {
         super(_configuration);
     }
