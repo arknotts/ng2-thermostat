@@ -12,6 +12,7 @@ export class PiGpioTrigger implements ITrigger {
     constructor(private _outPin: number, private _invertRelay: boolean = true) {
         gpio.setup(_outPin, gpio.DIR_OUT, (err) => {
             if(err) throw `Error connecting to pin ${_outPin}: ${err}`;
+            this.stop();
         });
     }
 
