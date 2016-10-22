@@ -1,12 +1,13 @@
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { BaseServer } from './baseServer';
-import { ITrigger, FurnaceTrigger, AcTrigger } from '../core/trigger';
+import { ITrigger, PiGpioTrigger, AcTrigger } from '../core/trigger';
 import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
 import { ITempSensor, Dht11TempSensor } from '../core/tempSensor';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
 
-const PIN_TEMP_SENSOR = 15;
+const PIN_TEMP_SENSOR = 4;
+const PIN_FURNACE_TRIGGER = 15; //PIN 15, GPIO3
 
 export class RestServer extends BaseServer {
 
@@ -54,7 +55,7 @@ export class RestServer extends BaseServer {
     }
 
     buildFurnaceTrigger(): ITrigger {
-        return new FurnaceTrigger();
+        return new PiGpioTrigger(PIN_FURNACE_TRIGGER);
     }
 
     buildAcTrigger(): ITrigger {
