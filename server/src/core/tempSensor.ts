@@ -54,8 +54,10 @@ export class Dht11TempSensor extends BaseTempSensor {
 
     pollSensor(): number {
         let rawValue = dht.read();
+        let degreesCelsius = parseFloat(rawValue.temperature);
+        let degreesFahrenheit = degreesCelsius*1.8 + 32;
         //let humidity = rawValue.humidity.toFixed(2); //TODO 
-        return rawValue.temperature.toFixed(2);
+        return degreesFahrenheit;
     }
 }
 
