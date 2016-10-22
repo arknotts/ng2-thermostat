@@ -5,7 +5,7 @@ export interface ITrigger {
     stop(): void;
 }
 
-class PiGpioTrigger implements ITrigger {
+export class PiGpioTrigger implements ITrigger {
     constructor(private _outPin: number) {
         gpio.setup(_outPin, gpio.DIR_OUT, (err) => {
             if(err) throw `Error connecting to pin ${_outPin}: ${err}`;
