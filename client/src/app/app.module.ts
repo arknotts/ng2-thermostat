@@ -6,6 +6,8 @@ import { HttpModule } from '@angular/http';
 import { ThermostatService } from './thermostat.service';
 import { AppComponent } from './app.component';
 
+let thermostatService: ThermostatService = new ThermostatService('localhost', 3000);
+
 @NgModule({
   declarations: [
     AppComponent
@@ -15,7 +17,7 @@ import { AppComponent } from './app.component';
     FormsModule,
     HttpModule,
   ],
-  providers: [ThermostatService],
+  providers: [{provide: ThermostatService, useValue: thermostatService}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -4,17 +4,7 @@ import * as io from 'socket.io-client';
 import * as _ from 'lodash';
 
 import { ThermostatMode } from '../../../common/thermostatMode';
-
 import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
-
-const PORT:number = 3000;
-
-// export interface IThermostatService {
-// 	init();
-// 	start();
-// 	setTarget(target: number);
-// 	setMode(mode: ThermostatMode);
-// }
 
 @Injectable()
 export class ThermostatService {
@@ -25,10 +15,10 @@ export class ThermostatService {
 	status$: Observable<string>;
 	error$: Observable<string>;
 
-	constructor() {
-		this.socket = io(`localhost:${PORT}`).connect();
+	constructor(private _serverAddress: string, private _port: number = 3000) {
+		this.socket = io(`${_serverAddress}:${_port}`).connect();
 		this.socket.on('connect', () => {
-			console.log(`connected on port ${PORT}`);
+			console.log(`connected on port ${_port}`);
 		});
 
 		this.events$ = Observable.create((observer: Observer<IThermostatEvent>) => {
