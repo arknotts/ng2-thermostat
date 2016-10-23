@@ -47,9 +47,6 @@ export class AppComponent implements OnInit {
 		this.finalTarget$.subscribe((target: number) => {
 			this.thermostatService.setTarget(target);
 		});
-
-		this.thermostatService.init();
-    	this.thermostatService.start();
 	}
 	
 	setMode(mode: string) {
