@@ -1,4 +1,5 @@
 export enum ThermostatMode {
     Heating,
-    Cooling
+    Cooling,
+	Off
 }

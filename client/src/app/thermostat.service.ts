@@ -35,14 +35,6 @@ export class ThermostatService {
 									.map((event: IThermostatEvent) => event.message);
 	}
 
-	init() {
-		this.socket.emit('/init', {});
-	}
-
-	start() {
-		this.socket.emit('/start', {});
-	}
-
 	reset() {
 		this.socket.emit('/reset', {});
 	}

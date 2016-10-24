@@ -1,0 +1,16 @@
+{
+	"server": {
+		"port": 3000,
+		"type": "sim"
+	},
+	"thermostat": {
+		"defaultMode": "Heating",
+		"heatingTargetRange": [60,75],
+		"coolingTargetRange": [68,85],
+		"maxOvershootTemp": 4,
+		"maxRunTime": 1800000,
+		"minDelayBetweenRuns": 600000,
+		"tempEmitDelay": 300000,
+		"tempSensorPollDelay": 5000
+	}
+}

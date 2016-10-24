@@ -1,5 +1,6 @@
 import Rx = require('rxjs');
-var dht = require('node-dht-sensor');
+//var dht = require('node-dht-sensor');
+var dht: any;
 
 import { ITempSensorConfiguration } from './configuration';
 

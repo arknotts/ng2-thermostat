@@ -1,4 +1,5 @@
-var gpio = require('rpi-gpio');
+//var gpio = require('rpi-gpio');
+var gpio: any;
 
 export interface ITrigger {
     start(): void;

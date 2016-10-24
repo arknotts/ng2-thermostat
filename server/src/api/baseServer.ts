@@ -10,8 +10,6 @@ import { ITempReader } from '../core/tempReader';
 import { ITempSensor } from '../core/tempSensor';
 import { ITrigger } from '../core/trigger';
 
-const serverPort: number = 3000;
-
 export abstract class BaseServer {
 
     app = require('http').createServer(this.httpHandler);
@@ -20,64 +18,44 @@ export abstract class BaseServer {
     
     thermostat: Thermostat;
 
-    constructor() {}
+    constructor(private _thermostatConfiguration: IThermostatConfiguration, private _port: number = 3000) {
+		let tempReader = this.buildTempReader(this._thermostatConfiguration.TempSensorConfiguration);
+		let furnaceTrigger: ITrigger = this.buildFurnaceTrigger();
+		let acTrigger: ITrigger = this.buildAcTrigger();
+
+		this.thermostat = new Thermostat(this._thermostatConfiguration, tempReader, furnaceTrigger, acTrigger);
+
+		this.thermostat.eventStream.subscribe((e) => {
+			this.io.sockets.send(e);
+		});
+
+		this.thermostat.start();
+	}
 
     start() {
         this.preThermostatInitRoutes();
-        this.initThermostatRoute();
         this.postThermostatInitRoutes();
         this.listen();
     }
 
-	abstract buildConfiguration(passedConfiguration: any): IThermostatConfiguration;
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
 	abstract buildFurnaceTrigger(): ITrigger;
 	abstract buildAcTrigger(): ITrigger;
 
 	httpHandler(req: any, res: any) {
-		res.send('<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:' + serverPort);
+		res.send('<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:' + this._port);
 	}
 
+	//TODO can remove?
     preThermostatInitRoutes() {
 		this.router.use((socket: any, args: any, next: any) => {
 			next();
         });
     }
 
-    initThermostatRoute() {
-		this.router.on('/init', (socket: any, args: any, next: any) => {
-			let passedConfiguration = args[1];
-
-            let configuration = this.buildConfiguration(passedConfiguration);            
-            let tempReader = this.buildTempReader(configuration.TempSensorConfiguration);
-            let furnaceTrigger: ITrigger = this.buildFurnaceTrigger();
-            let acTrigger: ITrigger = this.buildAcTrigger();
-
-            //don't create duplicate thermostat instances
-            if(this.thermostat) {
-                this.reset();
-            }
-
-            this.thermostat = new Thermostat(configuration, tempReader, furnaceTrigger, acTrigger);
-
-			this.thermostat.eventStream.subscribe((e) => {
-				this.io.sockets.send(e);
-			});
-		});
-    }
-
     postThermostatInitRoutes() {
         this.router.on('/reset', (socket: any, args: any, next: any) => {
             this.reset();
-        });
-
-        this.router.use((socket: any, args: any, next: any) => {
-            if(this.thermostat) {
-                next();
-            }
-            else {
-				this.emitError('Thermostat must be initialized first!');
-            }
         });
 
         this.router.on('/start', (socket: any, args: any, next: any) => {
@@ -103,8 +81,7 @@ export abstract class BaseServer {
 			let payload = args[1];
 			if(payload) {
 				if(payload.mode != null) {
-					let newMode = (<any>ThermostatMode)[payload.mode];
-					this.thermostat.setMode(newMode);
+					this.thermostat.setMode(<ThermostatMode>(payload.mode));
 				}
 				else {
 					next('Invalid set mode call');
@@ -129,17 +106,15 @@ export abstract class BaseServer {
 	}
 
     reset() {
-        if(this.thermostat) {
-            this.thermostat.stop();
-            this.thermostat = null;
-        }
+		this.thermostat.stop();
+		this.thermostat.start();
     }
     
     listen() {
 		this.io.use(this.router);
 
-        this.app.listen(serverPort, () => {
-            console.log('Socket listening on port ' + serverPort);
+        this.app.listen(this._port, () => {
+            console.log('Socket listening on port ' + this._port);
         });
     }
 

@@ -68,7 +68,6 @@ export class Thermostat {
     }
 
     tempReceived(temp: number) {
-		
         if(this.configuration.Mode == ThermostatMode.Heating) {
             if(temp < this.target - 1) {
                 this.tryStartTrigger(temp);
@@ -132,6 +131,7 @@ export class Thermostat {
         return this.configuration.Mode;
     }
 
+	//TODO turn current trigger off before switching modes
     setMode(mode: ThermostatMode) {
         this.configuration.Mode = mode;
         this.setTarget(this.configuration.DefaultTarget);

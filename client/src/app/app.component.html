@@ -1,11 +1,8 @@
+<br><br><br><br><br><br>
 <div id="ts-container" class="row">
   <div class="col-md-4">
     <!--<h3>Thermostat</h3>-->
-
-    
-
-    
-    <h2>{{thermostatService.temperature$ | async | number:'1.0-1'}}º</h2>
+	  <h2>{{thermostatService.temperature$ | async | number:'1.0-1'}}º</h2>
   </div>
 
   <div class="col-md-4">
@@ -19,15 +16,15 @@
     <h3>{{status$ | async}}</h3>
     <br>
     <div class="btn-group center-block" role="group">
-      <button type="button" class="btn btn-default" (click)="setMode('cool')">Cool</button>
-      <button type="button" class="btn btn-default" (click)="setMode('off')">Off</button>
-      <button type="button" class="btn btn-default" (click)="setMode('heat')">Heat</button>
+      <button type="button" class="btn btn-default" (click)="setMode('Cooling')">Cool</button>
+      <button type="button" class="btn btn-default" (click)="setMode('Off')">Off</button>
+      <button type="button" class="btn btn-default" (click)="setMode('Heating')">Heat</button>
     </div>
   </div>
 
   <div class="col-md-4">
     <h1 (click)="targetUp()"><i class="fa fa-chevron-up"></i></h1>
     <h2>{{displayTarget$ | async}}</h2>
-    <h1 (click)="targetDown()"><i class="fa fa-chevron-down"></i></h1>    
+    <h1 (click)="targetDown()"><i class="fa fa-chevron-down"></i></h1>   
   </div>
 </div>

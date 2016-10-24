@@ -30,7 +30,8 @@ export class AppComponent implements OnInit {
 							.merge(this.thermostatService.error$)
 							.merge(this.displayTarget$.map(() => 'pending'))
 							.merge(this.finalTarget$.map(() => 'ready'));
-							
+
+		//TODO merge this with regular events$ stream and use error handler on subscribe call				
 		this.thermostatService.error$.subscribe((err: string) => {
 			console.log('got err', err);
 		});
@@ -40,7 +41,7 @@ export class AppComponent implements OnInit {
 		if(!environment.production) {
 			//log all events to console for debugging
 			this.thermostatService.events$.subscribe((event) => {
-				console.log(event);
+				console.log(`${event.topic.join('/')} : ${event.message}`);
 			});
 		}
 
@@ -50,14 +51,10 @@ export class AppComponent implements OnInit {
 	}
 	
 	setMode(mode: string) {
-		this.thermostatService.reset();
-		let thermostatMode = mode == 'heat' ? ThermostatMode.Heating : 
-				   			 mode == 'cool' ? ThermostatMode.Cooling : null;
+		let thermostatMode = (<any>ThermostatMode)[mode];
 		
 		if(thermostatMode != null) {
-			this.thermostatService.init();
-			this.thermostatService.setMode(thermostatMode);	
-			this.thermostatService.start();
+			this.thermostatService.setMode(thermostatMode);
 		}
 	}
 
