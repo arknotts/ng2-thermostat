@@ -1,5 +1,5 @@
 var environment = process.env.NODE_ENV;
-var dht: any = environment.toUpperCase() == 'PROD' ? require('node-dht-sensor') : null;
+var dht: any = environment && environment.toUpperCase() == 'PROD' ? require('node-dht-sensor') : null;
 import Rx = require('rxjs');
 
 import { ITempSensorConfiguration } from './configuration';
