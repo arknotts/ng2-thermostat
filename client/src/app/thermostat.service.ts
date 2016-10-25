@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { Observable, Observer } from 'rxjs';
 import * as io from 'socket.io-client';
 import * as _ from 'lodash';
 
+import { AppConfig, APP_CONFIG } from '../app.config';
 import { ThermostatMode } from '../../../common/thermostatMode';
 import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
 
@@ -15,10 +16,10 @@ export class ThermostatService {
 	status$: Observable<string>;
 	error$: Observable<string>;
 
-	constructor(private _serverAddress: string, private _port: number = 3000) {
-		this.socket = io(`${_serverAddress}:${_port}`).connect();
+	constructor(@Inject(APP_CONFIG) appConfig: AppConfig) {
+		this.socket = io(`${appConfig.serverAddress}:${appConfig.port}`).connect();
 		this.socket.on('connect', () => {
-			console.log(`connected on port ${_port}`);
+			console.log(`connected on port ${appConfig.port}`);
 		});
 
 		this.events$ = Observable.create((observer: Observer<IThermostatEvent>) => {

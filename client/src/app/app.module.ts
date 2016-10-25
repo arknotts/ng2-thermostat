@@ -3,10 +3,9 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
+import { APP_CONFIG, THERMOSTAT_CONFIG } from'../app.config';
 import { ThermostatService } from './thermostat.service';
 import { AppComponent } from './app.component';
-
-let thermostatService: ThermostatService = new ThermostatService('localhost', 3000);
 
 @NgModule({
   declarations: [
@@ -17,7 +16,10 @@ let thermostatService: ThermostatService = new ThermostatService('localhost', 30
     FormsModule,
     HttpModule,
   ],
-  providers: [{provide: ThermostatService, useValue: thermostatService}],
+  providers: [
+    {provide: APP_CONFIG, useValue: THERMOSTAT_CONFIG},
+    ThermostatService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
