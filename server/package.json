@@ -9,7 +9,8 @@
     "test": "mocha src/core",
     "build-test": "npm run build && npm test",
     "serve": "node src/api/run.js",
-    "build-serve": "npm run build && npm run serve"
+    "build-serve": "npm run build && npm run serve",
+    "prod-init": "npm install rpi-gpio@0.7.0 && npm install node-dht-sensor@0.0.28"
   },
   "author": "",
   "license": "ISC",
@@ -31,7 +32,6 @@
     "body-parser": "^1.15.2",
     "es6-shim": "^0.35.1",
     "express": "^4.14.0",
-    "rpi-gpio": "^0.7.0",
     "rxjs": "^5.0.0-beta.12",
     "socket.io": "^1.4.8",
     "socket.io-events": "^0.4.6"

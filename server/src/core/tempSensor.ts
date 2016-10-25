@@ -1,6 +1,6 @@
+var environment = process.env.NODE_ENV;
+var dht: any = environment.toUpperCase() == 'PROD' ? require('node-dht-sensor') : null;
 import Rx = require('rxjs');
-//var dht = require('node-dht-sensor');
-var dht: any;
 
 import { ITempSensorConfiguration } from './configuration';
 
