@@ -1,5 +1,5 @@
 var environment = process.env.NODE_ENV;
-var gpio: any = environment && environment.toUpperCase() == 'PROD' ? require('rpi-gpio') : null;
+var gpio: any = environment && environment.toUpperCase() == 'PRODUCTION' ? require('rpi-gpio') : null;
 
 export interface ITrigger {
     start(): void;
