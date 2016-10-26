@@ -8,7 +8,7 @@
     "build": "tsc",
     "test": "mocha src/core",
     "build-test": "npm run build && npm test",
-    "serve": "node src/api/run.js",
+    "serve": "node run.js",
     "build-serve": "npm run build && npm run serve",
     "prod-init": "npm install rpi-gpio@0.7.0 && npm install node-dht-sensor@0.0.28"
   },

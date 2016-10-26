@@ -1,13 +1,13 @@
 import * as fs from 'fs';
 
-import { IThermostatConfiguration, ThermostatConfiguration } from '../core/configuration';
-import { ThermostatMode } from '../../../common/thermostatMode';
+import { IThermostatConfiguration, ThermostatConfiguration } from './src/core/configuration';
+import { ThermostatMode } from '../common/thermostatMode';
 
-import { BaseServer } from './baseServer';
-import { RestServer } from './restServer';
-import { SimServer } from './simServer';
+import { BaseServer } from './src/api/baseServer';
+import { RestServer } from './src/api/restServer';
+import { SimServer } from './src/api/simServer';
 
-fs.readFile(`${__dirname}/../../thermostat.config.json`, (err, data) => {
+fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 	if(err) throw err;
 
 	let config = JSON.parse(<any>data);
