@@ -15,20 +15,22 @@ export class AppComponent implements OnInit {
 	title = '';
 
 	targetDelta$: Subject<number>;
-	displayTarget$: Observable<number>;
+	potentialTarget$: Observable<number>;
 	finalTarget$: Observable<number>;
+	displayTarget$: Observable<number>;
 
 	status$: Observable<string>;
 
 	constructor(private thermostatService: ThermostatService) {
 
 		this.targetDelta$ = new Subject<number>();
-		this.displayTarget$ = this.targetDelta$.scan((acc, val) => acc+val);
-		this.finalTarget$ = this.displayTarget$.debounceTime(3000);
+		this.potentialTarget$ = this.targetDelta$.scan((acc, val) => acc + val);
+		this.finalTarget$ = this.potentialTarget$.debounceTime(3000);
+		this.displayTarget$ = this.potentialTarget$.merge(this.thermostatService.target$);
 		
 		this.status$ = this.thermostatService.status$
 							.merge(this.thermostatService.error$)
-							.merge(this.displayTarget$.map(() => 'pending'))
+							.merge(this.potentialTarget$.map(() => 'pending'))
 							.merge(this.finalTarget$.map(() => 'ready'));
 
 		//TODO merge this with regular events$ stream and use error handler on subscribe call				
@@ -59,9 +61,6 @@ export class AppComponent implements OnInit {
 	}
 
 
-	ngAfterViewInit() {
-		this.targetDelta$.next(70);
-	}
 
 	targetUp() {
 		this.targetDelta$.next(1);

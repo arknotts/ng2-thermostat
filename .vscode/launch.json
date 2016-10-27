@@ -5,7 +5,7 @@
 			"name": "Launch",
 			"type": "node",
 			"request": "launch",
-			"program": "${workspaceRoot}/server/src/api/run.js",
+			"program": "${workspaceRoot}/server/run.js",
 			"stopOnEntry": false,
 			"args": [],
 			"cwd": "${workspaceRoot}",
@@ -18,7 +18,7 @@
 				"NODE_ENV": "development"
 			},
 			"console": "internalConsole",
-			"sourceMaps": false,
+			"sourceMaps": true,
 			"outFiles": []
 		},
 		{

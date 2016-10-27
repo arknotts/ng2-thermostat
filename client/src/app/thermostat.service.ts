@@ -13,6 +13,7 @@ export class ThermostatService {
 	events$: Observable<IThermostatEvent>;
 
 	temperature$: Observable<number>;
+	target$: Observable<number>;
 	status$: Observable<string>;
 	error$: Observable<string>;
 
@@ -27,6 +28,9 @@ export class ThermostatService {
 		});
 
 		this.temperature$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Temperature))
+										.map((event: IThermostatEvent): number => parseFloat(event.message));
+
+		this.target$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Target))
 										.map((event: IThermostatEvent): number => parseFloat(event.message));
 
 		this.status$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Status))

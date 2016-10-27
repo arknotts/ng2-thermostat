@@ -1,12 +1,9 @@
 import fs = require('fs');
 import path = require('path');
 
-import { ThermostatMode } from '../../../common/thermostatMode';
-
 import { BaseServer } from './baseServer';
 import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
-import { ITempSensor } from '../core/tempSensor';
 import { ITrigger } from '../core/trigger';
 
 import { SimTempSensor } from '../sim/simTempSensor';
@@ -32,16 +29,16 @@ export class SimServer extends BaseServer {
 		});
 	}
 
-    postThermostatInitRoutes() {
-        super.postThermostatInitRoutes();
+    setupRoutes(socket: SocketIO.Socket) {
+        super.setupRoutes(socket);
 
-		this.router.on('/tempChangePerSecond', (socket: any, args: any, next: any) => {
-			if(args[1] && args[1].tempChangePerSecond) {
-				let tempChange = parseFloat(args[1].tempChangePerSecond);
+		socket.on('/tempChangePerSecond', (data: any) => {
+			if(data && data.tempChangePerSecond) {
+				let tempChange = parseFloat(data.tempChangePerSecond);
             	this._simTempSensor.tempChangePerSecond = tempChange;
 			}
 			else {
-				next('Invalid temp change per second call');
+				this.emitError('Invalid temp change per second call');
 			}
 		});
     }

@@ -5,8 +5,6 @@ import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { ITempReader } from './tempReader';
 import { IThermostatConfiguration } from './configuration';
-import { MovingAverageTempReader } from './tempReader';
-import { Dht11TempSensor } from './tempSensor';
 import { ITrigger } from './trigger';
 
 export class Thermostat {
