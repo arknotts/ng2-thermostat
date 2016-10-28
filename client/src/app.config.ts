@@ -6,8 +6,8 @@ export interface AppConfig {
 }
 
 export const THERMOSTAT_CONFIG: AppConfig = {
-//  serverAddress: 'localhost',
-  serverAddress: '192.168.0.103',
+  serverAddress: 'localhost',
+  //serverAddress: '192.168.0.103',
   port: 3000
 };
 
