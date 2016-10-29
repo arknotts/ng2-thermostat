@@ -9,6 +9,7 @@ import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/conf
 import { ITempReader } from '../core/tempReader';
 import { ITrigger } from '../core/trigger';
 
+import { IBroadcaster } from './broadcaster';
 import { ISchedule, IScheduleItem } from './schedule';
 
 export abstract class BaseServer {
@@ -19,7 +20,10 @@ export abstract class BaseServer {
     thermostat: Thermostat;
 	lastTemperature: number; //TODO read directly from stream, this is a hack
 
-    constructor(private _thermostatConfiguration: IThermostatConfiguration, private _schedule: ISchedule, private _port: number = 3000) {
+    constructor(private _thermostatConfiguration: IThermostatConfiguration, 
+				private _broadcaster: IBroadcaster,
+				private _schedule: ISchedule, 
+				private _port: number = 3000) {
 		this.app = http.createServer(this.httpHandler);
 		this.io = socketIo(this.app);
 
@@ -34,8 +38,13 @@ export abstract class BaseServer {
 		this.thermostat = new Thermostat(this._thermostatConfiguration, tempReader, furnaceTrigger, acTrigger);
 
 		this.thermostat.eventStream.subscribe((e) => {
-			//broadcast thermostat events to all clients
+			//send thermostat events to all clients connected via sockets
 			this.io.sockets.send(e);
+
+			//broadcast events over the network
+			if(this._broadcaster) {
+				this._broadcaster.broadcast(e);
+			}
 
 			//TODO this is a hack...
 			if(e.topic == ThermostatTopic.Temperature) {
@@ -51,7 +60,9 @@ export abstract class BaseServer {
             console.log('Socket listening on port ' + this._port);
         });
 
-
+		if(this._broadcaster) {
+			this._broadcaster.connect();
+		}
     }
 
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;

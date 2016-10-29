@@ -7,6 +7,7 @@ import { BaseServer } from './src/api/baseServer';
 import { RestServer } from './src/api/restServer';
 import { SimServer } from './src/api/simServer';
 import { ISchedule } from './src/api/schedule';
+import { IBroadcaster, MqttBroadcaster } from './src/api/broadcaster';
 
 fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 	if(err) throw err;
@@ -15,6 +16,7 @@ fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 	let thermostatConfig: any = config.thermostat;
 	let serverConfig: any = config.server;
 	let schedule: ISchedule = config.schedule;
+	let broadcasterConfig: any = config.broadcaster;
 
 	let configuration: IThermostatConfiguration = new ThermostatConfiguration(
 		thermostatConfig.heatingTargetRange,
@@ -29,10 +31,17 @@ fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 		thermostatConfig.tempEmitDelay
 	);
 
+	let broadcaster: IBroadcaster = null;
 	let server: BaseServer;
 
+	if(broadcasterConfig.type == 'mqtt') {
+		broadcaster = new MqttBroadcaster(broadcasterConfig.brokerUrl,
+										  broadcasterConfig.username,
+										  broadcasterConfig.password);
+	}
+
 	if(serverConfig.type.toLowerCase() == 'rest') {
-		server = new RestServer(configuration, schedule);
+		server = new RestServer(configuration, broadcaster, schedule);
 	}
 	else if(serverConfig.type.toLowerCase() == 'sim') {
 		server = new SimServer(configuration);

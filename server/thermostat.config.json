@@ -13,6 +13,12 @@
 		"tempEmitDelay": 300000,
 		"tempSensorPollDelay": 5000
 	},
+	"broadcaster": {
+		"type": "mqtt",
+		"brokerUrl": "",
+		"username": "",
+		"password": ""
+	},
 	"schedule": {
 		"weekdays": [
 			{ "time": 6, "temperature": 68 },
