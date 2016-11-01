@@ -36,7 +36,9 @@ export abstract class BaseServer {
 		let acTrigger: ITrigger = this.buildAcTrigger();
 
 		this.thermostat = new Thermostat(this._thermostatConfiguration, tempReader, furnaceTrigger, acTrigger);
+	}
 
+    start() {
 		this.thermostat.eventStream.subscribe((e) => {
 			//send thermostat events to all clients connected via sockets
 			this.io.sockets.send(e);
@@ -52,39 +54,43 @@ export abstract class BaseServer {
 			}
 		});
 
-		this.thermostat.start();
-	}
+		if(this._broadcaster) {
+			this._broadcaster.connect();
+		}
 
-    start() {
         this.app.listen(this._port, () => {
             console.log('Socket listening on port ' + this._port);
         });
 
-		if(this._broadcaster) {
-			this._broadcaster.connect();
-		}
+		this.thermostat.start();
+
+		this.scheduleNextTemperatureChange();
     }
 
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
 	abstract buildFurnaceTrigger(): ITrigger;
 	abstract buildAcTrigger(): ITrigger;
 
-	initSchedule() {
+	//TODO this logic is slightly flawed for transitions from one day to the next
+	scheduleNextTemperatureChange() {
 		let now = new Date();
 		let hour = now.getHours();
 		let isWeekend = (now.getDay() == 6) || (now.getDay() == 0);
 		let scheduleItems = isWeekend ? this._schedule.weekends : this._schedule.weekdays;
 
-		scheduleItems.forEach((item) => {
+		function parseSchedule() {
+
+		}
+
+		scheduleItems.forEach((item, idx) => {
 			if(item.time > hour) {
 				let millisecondsToDelay = (item.time - hour) * 60 * 60 * 1000;
-				setTimeout(() => this.applyScheduleItem(item), millisecondsToDelay);
+				setTimeout(() => {
+					this.thermostat.setTarget(item.temperature);
+					this.scheduleNextTemperatureChange();
+				}, millisecondsToDelay);
 			}
 		});
-	}
-
-	applyScheduleItem(scheduleItem: IScheduleItem) {
-		this.thermostat.setTarget(scheduleItem.temperature);
 	}
 
 	httpHandler(req: any, res: any) {
