@@ -19,6 +19,8 @@
       <button type="button" class="btn btn-default" (click)="setMode('Off')">Off</button>
       <button type="button" class="btn btn-default" (click)="setMode('Heating')">Heat</button>
     </div>
+	<br><br><br>
+	<chart [options]="options" (load)="saveInstance($event.context)"></chart>
   </div>
 
   <div class="col-md-4">
