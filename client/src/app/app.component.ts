@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../environments/environment';
+import { BaseChartDirective } from 'ng2-charts/ng2-charts';
+import * as moment from 'moment';
 
 import { ThermostatMode } from '../../../common/thermostatMode';
 
@@ -26,6 +28,27 @@ export class AppComponent implements OnInit {
 
 	status$: Observable<string>;
 
+	//tempHistory: Array<number> = [];
+	//targetHistory: Array<any>;
+	lineChartData: Array<any>;
+	lineChartOptions: any = {
+		animation: false,
+		responsive: true
+	};
+	lineChartLabels:Array<any> = [];
+	lineChartColors: Array<any> = [
+		{ // grey
+			backgroundColor: 'rgba(148,159,177,0.2)',
+			borderColor: 'rgba(148,159,177,1)',
+			pointBackgroundColor: 'rgba(148,159,177,1)',
+			pointBorderColor: '#fff',
+			pointHoverBackgroundColor: '#fff',
+			pointHoverBorderColor: 'rgba(148,159,177,0.8)'
+		},
+	];
+
+	@ViewChild(BaseChartDirective) chart: BaseChartDirective;
+
 	constructor(private thermostatService: ThermostatService) {
 
 		this.targetDelta$ = new Subject<IUiTarget>();
@@ -47,6 +70,18 @@ export class AppComponent implements OnInit {
 		this.thermostatService.error$.subscribe((err: string) => {
 			console.log('got err', err);
 		});
+
+		this.lineChartData = [
+			{
+				data: this.thermostatService.temperature$
+											.throttleTime(60000)
+											.takeLast(5)
+											.toArray(),
+				label: 'ºF'
+			},
+			//{data: this.targetHistory, label: 'Target'}
+		];
+		
 	}
 
 	ngOnInit() {
@@ -66,6 +101,23 @@ export class AppComponent implements OnInit {
 
 		this.finalTarget$.subscribe((target: number) => {
 			this.thermostatService.setTarget(target);
+		});
+
+		//TODO can we do this using only observables?
+		this.thermostatService.temperature$.throttleTime(60000).subscribe((temperature) => {
+			// this.tempHistory.push(temperature);
+			// this.lineChartLabels.push(moment().format('h:mm'));
+
+			// if(this.tempHistory.length > 20) {
+			// 	this.tempHistory.shift();
+			// }
+
+			// if(this.lineChartLabels.length > 20) {
+			// 	this.lineChartLabels.shift();
+			// }
+
+			this.chart.ngOnChanges({});
+			//TODO trim to fixed length
 		});
 	}
 	
