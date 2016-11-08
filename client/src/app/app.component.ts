@@ -107,7 +107,9 @@ export class AppComponent implements OnInit {
 				this.chart.series[0].removePoint(0);
 			}
 
-			 //TODO trim target array?
+			if(this.chart.series[1].data.length > 20) {
+				this.chart.series[1].removePoint(0);
+			}
 		});
 	}
 
