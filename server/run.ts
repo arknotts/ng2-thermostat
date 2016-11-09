@@ -6,7 +6,7 @@ import { ThermostatMode } from '../common/thermostatMode';
 import { BaseServer } from './src/api/baseServer';
 import { RestServer } from './src/api/restServer';
 import { SimServer } from './src/api/simServer';
-import { ISchedule } from './src/api/schedule';
+import { ISchedule, Scheduler } from './src/api/schedule';
 import { IBroadcaster, MqttBroadcaster } from './src/api/broadcaster';
 
 fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
@@ -41,7 +41,7 @@ fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 	}
 
 	if(serverConfig.type.toLowerCase() == 'rest') {
-		server = new RestServer(configuration, broadcaster, schedule);
+		server = new RestServer(configuration, broadcaster, new Scheduler(schedule));
 	}
 	else if(serverConfig.type.toLowerCase() == 'sim') {
 		server = new SimServer(configuration);

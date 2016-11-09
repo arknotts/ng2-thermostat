@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run serve",
     "build": "tsc",
-    "test": "mocha src/core",
+    "test": "mocha src --recursive",
     "build-test": "npm run build && npm test",
     "serve": "node run.js",
     "build-serve": "npm run build && npm run serve",

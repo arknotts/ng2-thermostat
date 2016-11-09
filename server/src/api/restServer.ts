@@ -7,14 +7,14 @@ import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
 
 import { BaseServer } from './baseServer';
 import { IBroadcaster } from './broadcaster';
-import { ISchedule } from './schedule';
+import { Scheduler } from './schedule';
 
 const PIN_TEMP_SENSOR = 4;
 const PIN_FURNACE_TRIGGER = 15; //PIN 15, GPIO3
 
 export class RestServer extends BaseServer {
 
-	constructor(thermostatConfiguration: IThermostatConfiguration, broadcaster: IBroadcaster, schedule: ISchedule) {
+	constructor(thermostatConfiguration: IThermostatConfiguration, broadcaster: IBroadcaster, schedule: Scheduler) {
 		super(thermostatConfiguration, broadcaster, schedule);
 	}
 
