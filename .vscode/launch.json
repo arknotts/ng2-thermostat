@@ -22,15 +22,26 @@
 			"outFiles": []
 		},
 		{
+			"name": "Run mocha",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/server/node_modules/mocha/bin/_mocha",
+			"stopOnEntry": false,
+			"args": ["src", "--recursive"],
+			"cwd": "${workspaceRoot}/server",
+			"runtimeExecutable": null,
+			"env": { "NODE_ENV": "testing"}
+		},
+		{
 			"name": "Attach",
 			"type": "node",
 			"request": "attach",
 			"port": 5858,
 			"address": "localhost",
 			"restart": false,
-			"sourceMaps": false,
+			"sourceMaps": true,
 			"outFiles": [],
-			"localRoot": "${workspaceRoot}",
+			"localRoot": "${workspaceRoot}/server",
 			"remoteRoot": null
 		},
 		{

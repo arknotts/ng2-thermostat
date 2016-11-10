@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as socketIo from 'socket.io';
+import * as moment from 'moment';
 
 import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
@@ -73,7 +74,7 @@ export abstract class BaseServer {
 
 	//TODO this logic is slightly flawed for transitions from one day to the next
 	scheduleNextTemperatureChange() {
-		this._scheduler.scheduleNext(new Date(), (temperature) => {
+		this._scheduler.scheduleNext(moment(), (temperature) => {
 			this.thermostat.setTarget(temperature);
 			this.scheduleNextTemperatureChange();
 		});
