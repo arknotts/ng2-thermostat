@@ -1,6 +1,5 @@
 import * as http from 'http';
 import * as socketIo from 'socket.io';
-import * as moment from 'moment';
 
 import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
@@ -65,20 +64,14 @@ export abstract class BaseServer {
 
 		this.thermostat.start();
 
-		this.scheduleNextTemperatureChange();
+		this._scheduler.initSchedule((temperature) => {
+			this.thermostat.setTarget(temperature);
+		});
     }
 
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
 	abstract buildFurnaceTrigger(): ITrigger;
 	abstract buildAcTrigger(): ITrigger;
-
-	//TODO this logic is slightly flawed for transitions from one day to the next
-	scheduleNextTemperatureChange() {
-		this._scheduler.scheduleNext(moment(), (temperature) => {
-			this.thermostat.setTarget(temperature);
-			this.scheduleNextTemperatureChange();
-		});
-	}
 
 	httpHandler(req: any, res: any) {
 		res.send('<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:' + this._port);
