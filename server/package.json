@@ -6,7 +6,8 @@
   "scripts": {
     "start": "npm run serve",
     "build": "tsc",
-    "test": "mocha src/core",
+    "test": "mocha src --recursive",
+    "test-debug": "mocha src --recursive --debug-brk",
     "build-test": "npm run build && npm test",
     "serve": "node run.js",
     "build-serve": "npm run build && npm run serve",
@@ -16,6 +17,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/chai": "^3.4.34",
+    "@types/cron": "^1.0.30",
     "@types/es6-shim": "^0.31.32",
     "@types/mocha": "^2.2.32",
     "@types/mqtt": "0.0.32",
@@ -29,6 +31,7 @@
     "typescript": "^2.0.3"
   },
   "dependencies": {
+    "cron": "^1.1.1",
     "es6-shim": "^0.35.1",
     "mqtt": "^2.0.1",
     "rxjs": "^5.0.0-beta.12",

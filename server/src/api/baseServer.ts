@@ -10,7 +10,7 @@ import { ITempReader } from '../core/tempReader';
 import { ITrigger } from '../core/trigger';
 
 import { IBroadcaster } from './broadcaster';
-import { ISchedule, IScheduleItem } from './schedule';
+import { Scheduler } from './schedule';
 
 export abstract class BaseServer {
 
@@ -22,7 +22,7 @@ export abstract class BaseServer {
 
     constructor(private _thermostatConfiguration: IThermostatConfiguration, 
 				private _broadcaster: IBroadcaster,
-				private _schedule: ISchedule, 
+				private _scheduler: Scheduler, 
 				private _port: number = 3000) {
 		this.app = http.createServer(this.httpHandler);
 		this.io = socketIo(this.app);
@@ -64,34 +64,14 @@ export abstract class BaseServer {
 
 		this.thermostat.start();
 
-		this.scheduleNextTemperatureChange();
+		this._scheduler.initSchedule((temperature) => {
+			this.thermostat.setTarget(temperature);
+		});
     }
 
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
 	abstract buildFurnaceTrigger(): ITrigger;
 	abstract buildAcTrigger(): ITrigger;
-
-	//TODO this logic is slightly flawed for transitions from one day to the next
-	scheduleNextTemperatureChange() {
-		let now = new Date();
-		let hour = now.getHours();
-		let isWeekend = (now.getDay() == 6) || (now.getDay() == 0);
-		let scheduleItems = isWeekend ? this._schedule.weekends : this._schedule.weekdays;
-
-		function parseSchedule() {
-
-		}
-
-		scheduleItems.forEach((item, idx) => {
-			if(item.time > hour) {
-				let millisecondsToDelay = (item.time - hour) * 60 * 60 * 1000;
-				setTimeout(() => {
-					this.thermostat.setTarget(item.temperature);
-					this.scheduleNextTemperatureChange();
-				}, millisecondsToDelay);
-			}
-		});
-	}
 
 	httpHandler(req: any, res: any) {
 		res.send('<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:' + this._port);

@@ -21,14 +21,14 @@
 	},
 	"schedule": {
 		"weekdays": [
-			{ "time": 6, "temperature": 68 },
-			{ "time": 7.5, "temperature": 63 },
-			{ "time": 16, "temperature": 68 },
-			{ "time": 22, "temperature": 63 }
+			{ "time": "6:00", "temperature": 68 },
+			{ "time": "7:30", "temperature": 63 },
+			{ "time": "16:00", "temperature": 68 },
+			{ "time": "22:00", "temperature": 63 }
 		],
 		"weekends": [
-			{ "time": 7, "temperature": 68 },
-			{ "time": 22, "temperature": 63 }
+			{ "time": "7:00", "temperature": 68 },
+			{ "time": "22:00", "temperature": 63 }
 		]
 	}
 }

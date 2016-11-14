@@ -13,7 +13,7 @@ export class SimServer extends BaseServer {
     private _simTempSensor: SimTempSensor;
 
 	constructor(configuration: IThermostatConfiguration) {
-		super(configuration, null, {weekends: [], weekdays: []})
+		super(configuration, null, null)
 	}
 
 	httpHandler(req: any, res: any) {
