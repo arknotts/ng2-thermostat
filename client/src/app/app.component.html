@@ -1,3 +1,29 @@
+<div class="widget-container widget-social boxed">
+    <ul>
+        <li class="first"><a href="#" hidefocus="true" style="outline: none;" (click)="setMode('Heating')"><span>Heat</span></a></li>
+        <li><a href="#" class="social-pinterest" hidefocus="true" style="outline: none;" (click)="setMode('Off')"><span>Off</span></a></li>
+        <li class="last"><a href="#" class="social-twitter" hidefocus="true" style="outline: none;" (click)="setMode('Cooling')"><span>Cool</span></a></li>
+    </ul>
+</div>
+
+<div class="col-sm-6 col-xs-6">
+    <div class="widget-container widget-weather boxed clearfix">
+        <div class="air-temp"><strong>{{thermostatService.temperature$ | async | number:'1.0-1'}}º</strong></div>
+        <div>
+          <div class="buttons">
+              <a href="#" class="btn btn-left" hidefocus="true" style="outline: none;"><span class="gradient">&nbsp;&nbsp;<i class="fa fa-chevron-left"></i>&nbsp;</span></a>
+              {{displayTarget$ | async}}
+              <a href="#" class="btn btn-right" hidefocus="true" style="outline: none;"><span class="gradient"><i class="fa fa-chevron-right"></i>&nbsp;</span></a>
+          </div>
+        </div>
+        <!--<div class="water-temp"><strong>14°</strong></div>
+        <div class="wind-speed"><strong>13</strong></div>-->
+    </div>
+</div>
+
+
+
+
 <div id="ts-container" class="row">
   <div class="col-md-4">
     <!--<h3>Thermostat</h3>-->
@@ -19,6 +45,7 @@
       <button type="button" class="btn btn-default" (click)="setMode('Off')">Off</button>
       <button type="button" class="btn btn-default" (click)="setMode('Heating')">Heat</button>
     </div>
+
   </div>
 
   <div class="col-md-4">
