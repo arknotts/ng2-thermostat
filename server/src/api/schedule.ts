@@ -6,6 +6,7 @@ export interface IScheduleItem {
 }
 
 export interface ISchedule {
+	timezone: string;
 	weekdays: Array<IScheduleItem>;
 	weekends: Array<IScheduleItem>;
 }
@@ -15,15 +16,22 @@ export class Scheduler {
 
 	initSchedule(callback: {(temperature): void}) {
 		this._schedule.weekdays.forEach((item) => {
-			new cron.CronJob(this.buildCronString(item.time, '1-5'), () => {
-				callback(item.temperature);
-			}).start();
+			this.initCronJob(item, 'MON-FRI', callback);
 		});
 
 		this._schedule.weekends.forEach((item) => {
-			new cron.CronJob(this.buildCronString(item.time, '6-7'), () => {
+			this.initCronJob(item, 'SAT-SUN', callback);
+		});
+	}
+
+	private initCronJob(item: IScheduleItem, days: string, callback: {(temperature): void}) {
+		new cron.CronJob({
+			cronTime: this.buildCronString(item.time, days),
+			onTick: () => {
 				callback(item.temperature);
-			}).start();
+			},
+			start: true,
+			timeZone: this._schedule.timezone
 		});
 	}
 	
