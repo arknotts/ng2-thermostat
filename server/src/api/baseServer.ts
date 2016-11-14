@@ -64,9 +64,11 @@ export abstract class BaseServer {
 
 		this.thermostat.start();
 
-		this._scheduler.initSchedule((temperature) => {
-			this.thermostat.setTarget(temperature);
-		});
+		if(this._scheduler) {
+			this._scheduler.initSchedule((temperature) => {
+				this.thermostat.setTarget(temperature);
+			});
+		}
     }
 
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
