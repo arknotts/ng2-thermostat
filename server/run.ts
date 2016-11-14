@@ -1,4 +1,6 @@
 import * as fs from 'fs';
+import * as http from 'http';
+import * as socketIo from 'socket.io';
 
 import { IThermostatConfiguration, ThermostatConfiguration } from './src/core/configuration';
 import { ThermostatMode } from '../common/thermostatMode';
@@ -33,6 +35,19 @@ fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 
 	let broadcaster: IBroadcaster = null;
 	let server: BaseServer;
+	let httpServer: http.Server;
+    let io: SocketIO.Server;
+
+	httpServer = http.createServer((req: any, res: any) => {
+		res.writeHead(200, { 'Content-Type': 'text/html' });
+		res.end(`<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:${this._port}`, 'utf-8');
+	});
+
+	httpServer.listen(serverConfig.port, () => {
+	     console.log(`Socket listening on port ${serverConfig.port}`);
+	});
+
+	io = socketIo(httpServer);
 
 	if(broadcasterConfig.type == 'mqtt') {
 		broadcaster = new MqttBroadcaster(broadcasterConfig.brokerUrl,
@@ -41,10 +56,10 @@ fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
 	}
 
 	if(serverConfig.type.toLowerCase() == 'rest') {
-		server = new RestServer(configuration, broadcaster, new Scheduler(schedule));
+		server = new RestServer(configuration, io, broadcaster, new Scheduler(schedule));
 	}
 	else if(serverConfig.type.toLowerCase() == 'sim') {
-		server = new SimServer(configuration);
+		server = new SimServer(configuration, io);
 	}
 	else {
 		throw `Unknown server type \'${serverConfig.type}\' in configuration file.`;

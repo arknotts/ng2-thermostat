@@ -1,3 +1,5 @@
+import * as socketIo from 'socket.io';
+
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { ITrigger, PiGpioTrigger, AcTrigger } from '../core/trigger';
@@ -14,8 +16,8 @@ const PIN_FURNACE_TRIGGER = 15; //PIN 15, GPIO3
 
 export class RestServer extends BaseServer {
 
-	constructor(thermostatConfiguration: IThermostatConfiguration, broadcaster: IBroadcaster, schedule: Scheduler) {
-		super(thermostatConfiguration, broadcaster, schedule);
+	constructor(thermostatConfiguration: IThermostatConfiguration, io: SocketIO.Server, broadcaster: IBroadcaster, schedule: Scheduler) {
+		super(thermostatConfiguration, io, broadcaster, schedule);
 	}
 
 	buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader {

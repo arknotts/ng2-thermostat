@@ -1,5 +1,6 @@
 import fs = require('fs');
 import path = require('path');
+import * as socketIo from 'socket.io';
 
 import { BaseServer } from './baseServer';
 import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
@@ -12,8 +13,8 @@ import { SimTrigger } from '../sim/simTrigger';
 export class SimServer extends BaseServer {
     private _simTempSensor: SimTempSensor;
 
-	constructor(configuration: IThermostatConfiguration) {
-		super(configuration, null, null)
+	constructor(configuration: IThermostatConfiguration, io: SocketIO.Server) {
+		super(configuration, io)
 	}
 
 	httpHandler(req: any, res: any) {
@@ -49,10 +50,10 @@ export class SimServer extends BaseServer {
     }
 
 	buildFurnaceTrigger(): ITrigger {
-        return new SimTrigger(this.io, this._simTempSensor);
+        return new SimTrigger(this._io, this._simTempSensor);
     }
 
     buildAcTrigger(): ITrigger {
-        return new SimTrigger(this.io, this._simTempSensor);
+        return new SimTrigger(this._io, this._simTempSensor);
     }
 }

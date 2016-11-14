@@ -14,20 +14,15 @@ import { Scheduler } from './schedule';
 
 export abstract class BaseServer {
 
-    app: http.Server;
-    io: SocketIO.Server;
-    
     thermostat: Thermostat;
 	lastTemperature: number; //TODO read directly from stream, this is a hack
 
-    constructor(private _thermostatConfiguration: IThermostatConfiguration, 
-				private _broadcaster: IBroadcaster,
-				private _scheduler: Scheduler, 
-				private _port: number = 3000) {
-		this.app = http.createServer(this.httpHandler);
-		this.io = socketIo(this.app);
+    constructor(protected _thermostatConfiguration: IThermostatConfiguration,
+				protected _io: SocketIO.Server,
+				protected _broadcaster: IBroadcaster = null,
+				protected _scheduler: Scheduler = null) {
 
-		this.io.on('connection', (socket) => {
+		this._io.on('connection', (socket) => {
         	this.setupRoutes(socket);
 		});
 
@@ -41,7 +36,7 @@ export abstract class BaseServer {
     start() {
 		this.thermostat.eventStream.subscribe((e) => {
 			//send thermostat events to all clients connected via sockets
-			this.io.sockets.send(e);
+			this._io.sockets.send(e);
 
 			//broadcast events over the network
 			if(this._broadcaster) {
@@ -58,10 +53,6 @@ export abstract class BaseServer {
 			this._broadcaster.connect();
 		}
 
-        this.app.listen(this._port, () => {
-            console.log('Socket listening on port ' + this._port);
-        });
-
 		this.thermostat.start();
 
 		if(this._scheduler) {
@@ -69,15 +60,13 @@ export abstract class BaseServer {
 				this.thermostat.setTarget(temperature);
 			});
 		}
+
+		console.log('Server started!');
     }
 
 	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
 	abstract buildFurnaceTrigger(): ITrigger;
 	abstract buildAcTrigger(): ITrigger;
-
-	httpHandler(req: any, res: any) {
-		res.send('<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:' + this._port);
-	}
 
     setupRoutes(socket: SocketIO.Socket) {
 
@@ -134,7 +123,7 @@ export abstract class BaseServer {
 	}
 	
 	emitError(error: string) {
-		this.io.sockets.send(<IThermostatEvent>{
+		this._io.sockets.send(<IThermostatEvent>{
 			type: ThermostatEventType.Error,
 			topic: ThermostatTopic.Error,
 			message: error,
