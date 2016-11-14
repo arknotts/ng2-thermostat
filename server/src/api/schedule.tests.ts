@@ -15,6 +15,7 @@ describe('Schedule Unit Tests:', () => {
 
 	beforeEach(() => {
 		schedule = {
+			timezone: 'America/New_York',
 			weekdays: [
 				{ time: "6:00", temperature: 68 },
 				{ time: "7:30", temperature: 63 },
