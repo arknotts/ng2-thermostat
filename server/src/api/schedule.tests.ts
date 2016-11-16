@@ -2,19 +2,20 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 var expect = chai.expect;
 
-import { ISchedule, IScheduleItem, Scheduler } from './schedule';
+import { IScheduleConfiguration, IScheduleItem } from './configuration';
+import { Scheduler } from './schedule';
 
 describe('Schedule Unit Tests:', () => {
 	const DATE_MONDAY: Date = new Date(2016, 10, 14);
 	const DATE_SATURDAY: Date = new Date(2016, 10, 19);
 
-	let schedule: ISchedule;
+	let scheduleConfig: IScheduleConfiguration;
 	let scheduler: Scheduler;
 	let clock: sinon.SinonFakeTimers;
 	let callback: sinon.SinonSpy;
 
 	beforeEach(() => {
-		schedule = {
+		scheduleConfig = {
 			timezone: 'America/New_York',
 			weekdays: [
 				{ time: "6:00", temperature: 68 },
@@ -28,7 +29,7 @@ describe('Schedule Unit Tests:', () => {
 			]
 		};
 
-		scheduler = new Scheduler(schedule);
+		scheduler = new Scheduler(scheduleConfig);
 	});
 
 	afterEach(() => {
@@ -39,13 +40,13 @@ describe('Schedule Unit Tests:', () => {
 
 	it('should schedule all weekday temperature changes for every weekday', (done) => {
 		clock = sinon.useFakeTimers(DATE_MONDAY.getTime());
-		testSchedule(schedule.weekdays);
+		testSchedule(scheduleConfig.weekdays);
 		done();
 	});
 
 	it('should schedule all weekend temperature changes for Saturday and Sunday', (done) => {
 		clock = sinon.useFakeTimers(DATE_SATURDAY.getTime());
-		testSchedule(schedule.weekends);
+		testSchedule(scheduleConfig.weekends);
 		done();
 	});
 

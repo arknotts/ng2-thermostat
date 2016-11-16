@@ -1,13 +1,12 @@
 import { BaseTempSensor } from '../core/tempSensor';
-import { ITempSensorConfiguration } from '../core/configuration';
 
 export class SimTempSensor extends BaseTempSensor {
 
     currTemp: number;
     lastTempDropMillis: number;
 
-    constructor(_tempSensorConfiguration: ITempSensorConfiguration, public tempChangePerSecond: number, currTemp: number) {
-        super(_tempSensorConfiguration);
+    constructor(temperatureSensorPollDelay: number, public tempChangePerSecond: number, currTemp: number) {
+        super(temperatureSensorPollDelay);
 
 		this.currTemp = currTemp;
 		this.lastTempDropMillis = Date.now();

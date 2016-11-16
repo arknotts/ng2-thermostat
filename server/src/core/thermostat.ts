@@ -7,8 +7,20 @@ import { ITempReader } from './tempReader';
 import { IThermostatConfiguration } from './configuration';
 import { ITrigger } from './trigger';
 
-export class Thermostat {
+export interface IThermostat {
+	mode: ThermostatMode;
+	eventStream: Rx.Observable<IThermostatEvent>;
+	target: number;
+	start(): Rx.Observable<IThermostatEvent>;
+	stop();
+	isRunning(): boolean;
+    setTarget(target: number);
+    setMode(mode: ThermostatMode);
+}
 
+export class Thermostat implements IThermostat {
+
+	mode: ThermostatMode;
     private _target: number;
     private _targetOvershootBy: number;
     private _startTime: Date;
@@ -23,7 +35,7 @@ export class Thermostat {
                 private _furnaceTrigger: ITrigger, 
                 private _acTrigger: ITrigger) {
 				
-        this.setMode(configuration.Mode);
+        this.setMode(configuration.defaultMode);
 		this._eventObservers = [];
         this.eventStream = Rx.Observable.create((observer: Rx.Observer<IThermostatEvent>) => {
             this._eventObservers.push(observer);
@@ -55,18 +67,18 @@ export class Thermostat {
     }
 
     private tryStartTrigger(temp: number) {
-        if(this.isRunning() && Date.now() - this._startTime.getTime() > this.configuration.MaxRunTime) {
+        if(this.isRunning() && Date.now() - this._startTime.getTime() > this.configuration.maxRunTime) {
            this.stopTrigger();
         }
 		
-        if(this.isFirstRun() || Date.now() - this._stopTime.getTime() > this.configuration.MinDelayBetweenRuns) {
-            this._targetOvershootBy = Math.min(Math.abs(this.target - temp), this.configuration.MaxOvershootTemp)
+        if(this.isFirstRun() || Date.now() - this._stopTime.getTime() > this.configuration.minDelayBetweenRuns) {
+            this._targetOvershootBy = Math.min(Math.abs(this.target - temp), this.configuration.maxOvershootTemp)
             this.startTrigger();
         }
     }
 
-    tempReceived(temp: number) {
-        if(this.configuration.Mode == ThermostatMode.Heating) {
+    private tempReceived(temp: number) {
+        if(this.mode == ThermostatMode.Heating) {
             if(temp < this.target - 1) {
                 this.tryStartTrigger(temp);
             }
@@ -113,11 +125,11 @@ export class Thermostat {
                 this._target = target;
             }
             else {
-                if(target < this.configuration.TargetRange[0]) {
-                    this._target = this.configuration.TargetRange[0];
+                if(target < this.targetRange[0]) {
+                    this._target = this.targetRange[0];
                 }
-                else if(target > this.configuration.TargetRange[1]) {
-                    this._target = this.configuration.TargetRange[1];
+                else if(target > this.targetRange[1]) {
+                    this._target = this.targetRange[1];
                 }
             }
 
@@ -125,24 +137,24 @@ export class Thermostat {
         }
     }
 
-    get mode(): ThermostatMode {
-        return this.configuration.Mode;
-    }
-
 	//TODO turn current trigger off before switching modes
     setMode(mode: ThermostatMode) {
-        this.configuration.Mode = mode;
-        this.setTarget(this.configuration.DefaultTarget);
+        this.mode = mode;
+        this.setTarget(this.defaultTarget);
         this._currentTrigger = mode == ThermostatMode.Heating ? this._furnaceTrigger : this._acTrigger;
 		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Mode, mode.toString());
     }
 
-    get tempReader(): ITempReader {
-        return this._tempReader;
+    private targetIsWithinBounds(target: number) {
+        return target >= this.targetRange[0] && target <= this.targetRange[1];
     }
 
-    private targetIsWithinBounds(target: number) {
-        return target >= this.configuration.TargetRange[0] && target <= this.configuration.TargetRange[1];
+	private get targetRange(): Array<number> {
+		return this.mode == ThermostatMode.Heating ? this.configuration.heatingTargetRange : this.configuration.coolingTargetRange;
+	}
+
+	private get defaultTarget(): number {
+        return this.mode == ThermostatMode.Heating ? this.configuration.heatingTargetRange[0] : this.configuration.coolingTargetRange[1];
     }
 
     private isFirstRun() {
@@ -150,7 +162,7 @@ export class Thermostat {
     }
 
     private emitTriggerEvent(start: boolean) {
-        let topic = this.configuration.Mode == ThermostatMode.Heating ? 
+        let topic = this.mode == ThermostatMode.Heating ? 
 							ThermostatTopic.Furnace : ThermostatTopic.Ac;
         let value = start ? 'on' : 'off';
 

@@ -4,37 +4,30 @@ import * as socketIo from 'socket.io';
 import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
 
-import { Thermostat } from '../core/thermostat';
-import { IThermostatConfiguration, ITempSensorConfiguration } from '../core/configuration';
+import { IThermostat } from '../core/thermostat';
+import { IThermostatConfiguration } from '../core/configuration';
 import { ITempReader } from '../core/tempReader';
 import { ITrigger } from '../core/trigger';
 
 import { IBroadcaster } from './broadcaster';
-import { Scheduler } from './schedule';
+import { IScheduler } from './schedule';
 
-export abstract class BaseServer {
+export class ThermostatServer {
 
-    thermostat: Thermostat;
-	lastTemperature: number; //TODO read directly from stream, this is a hack
+	private lastTemperature: number; //TODO read directly from stream, this is a hack
 
-    constructor(protected _thermostatConfiguration: IThermostatConfiguration,
-				protected _io: SocketIO.Server,
+    constructor(protected _io: SocketIO.Server,
+				protected _thermostat: IThermostat,
 				protected _broadcaster: IBroadcaster = null,
-				protected _scheduler: Scheduler = null) {
+				protected _scheduler: IScheduler = null) {
 
 		this._io.on('connection', (socket) => {
         	this.setupRoutes(socket);
 		});
-
-		let tempReader = this.buildTempReader(this._thermostatConfiguration.TempSensorConfiguration);
-		let furnaceTrigger: ITrigger = this.buildFurnaceTrigger();
-		let acTrigger: ITrigger = this.buildAcTrigger();
-
-		this.thermostat = new Thermostat(this._thermostatConfiguration, tempReader, furnaceTrigger, acTrigger);
 	}
 
     start() {
-		this.thermostat.eventStream.subscribe((e) => {
+		this._thermostat.eventStream.subscribe((e) => {
 			//send thermostat events to all clients connected via sockets
 			this._io.sockets.send(e);
 
@@ -53,25 +46,21 @@ export abstract class BaseServer {
 			this._broadcaster.connect();
 		}
 
-		this.thermostat.start();
+		this._thermostat.start();
 
 		if(this._scheduler) {
 			this._scheduler.initSchedule((temperature) => {
-				this.thermostat.setTarget(temperature);
+				this._thermostat.setTarget(temperature);
 			});
 		}
 
 		console.log('Server started!');
     }
 
-	abstract buildTempReader(tempSensorConfiguration: ITempSensorConfiguration): ITempReader;
-	abstract buildFurnaceTrigger(): ITrigger;
-	abstract buildAcTrigger(): ITrigger;
-
-    setupRoutes(socket: SocketIO.Socket) {
+    private setupRoutes(socket: SocketIO.Socket) {
 
 		//emit "welcome" events to init client quickly
-		this.emitEvent(socket, ThermostatTopic.Target, this.thermostat.target.toString());
+		this.emitEvent(socket, ThermostatTopic.Target, this._thermostat.target.toString());
 		if(this.lastTemperature) {
 			this.emitEvent(socket, ThermostatTopic.Temperature, this.lastTemperature.toString());
 		}
@@ -81,40 +70,40 @@ export abstract class BaseServer {
 		});
 
 		socket.on('/start', () => {
-			this.thermostat.start();
+			this._thermostat.start();
 		});
 
 		socket.on('/target', (data: any) => {
 			if(data) {
 				if(data.target) {
-					this.thermostat.setTarget(data.target);
+					this._thermostat.setTarget(data.target);
 				}
 				else {
 					this.emitError('Invalid set target call');
 				}
 			}
 			else {
-				socket.emit('/target', { target: this.thermostat.target });
+				socket.emit('/target', { target: this._thermostat.target });
 			}
 		});
 
 		socket.on('/mode', (data: any) => {
 			if(data) {
 				if(data.mode != null) {
-					this.thermostat.setMode(<ThermostatMode>(data.mode));
+					this._thermostat.setMode(<ThermostatMode>(data.mode));
 				}
 				else {
 					this.emitError('Invalid set mode call');
 				}
 			}
 			else {
-				socket.emit('/mode', { mode: this.thermostat.mode });
+				socket.emit('/mode', { mode: this._thermostat.mode });
 			}
 		});
         
     }
 
-	emitEvent(socket: SocketIO.Socket, topic: string[], message: string) {
+	private emitEvent(socket: SocketIO.Socket, topic: string[], message: string) {
 		socket.send(<IThermostatEvent>{
 			type: ThermostatEventType.Message,
 			topic: topic,
@@ -122,7 +111,7 @@ export abstract class BaseServer {
 		});
 	}
 	
-	emitError(error: string) {
+	private emitError(error: string) {
 		this._io.sockets.send(<IThermostatEvent>{
 			type: ThermostatEventType.Error,
 			topic: ThermostatTopic.Error,
@@ -130,9 +119,9 @@ export abstract class BaseServer {
 		});
 	}
 
-    reset() {
-		this.thermostat.stop();
-		this.thermostat.start();
+    private reset() {
+		this._thermostat.stop();
+		this._thermostat.start();
     }
 
 }

@@ -8,7 +8,7 @@ import { ThermostatMode } from '../../../common/thermostatMode';
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
 import { Thermostat } from './thermostat';
-import { IThermostatConfiguration, ThermostatConfiguration, ITempSensorConfiguration, TempSensorConfiguration } from './configuration';
+import { IThermostatConfiguration, ThermostatConfiguration } from './configuration';
 import { ITrigger, FurnaceTrigger, AcTrigger } from './trigger';
 import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
 
@@ -18,7 +18,6 @@ describe('Thermostat Unit Tests:', () => {
     let coolingRange: Array<number>;
 
     let cfg: IThermostatConfiguration;
-    let tempSensorCfg: ITempSensorConfiguration;
     let tempSensor: ITempSensor;
     let tempRdr: ITempReader;
     let thermostat: Thermostat;
@@ -34,10 +33,9 @@ describe('Thermostat Unit Tests:', () => {
         heatingRange = [55,75];
         coolingRange = [68,80];
 
-        tempSensorCfg = new TempSensorConfiguration(tickDelay);
-        cfg = new ThermostatConfiguration(heatingRange, coolingRange, ThermostatMode.Heating, 1, 2000, 5, tempSensorCfg, 5000);
+        cfg = new ThermostatConfiguration(heatingRange, coolingRange, ThermostatMode.Heating, 1, 2000, 5, tickDelay, 5000);
 
-        tempSensor = new MockTempSensor(tempSensorCfg);
+        tempSensor = new MockTempSensor(tickDelay);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
         furnaceTrigger = new FurnaceTrigger();
         acTrigger = new AcTrigger();
@@ -317,7 +315,7 @@ describe('Thermostat Unit Tests:', () => {
 		describe('furnace running for longer than max run time', () => {
 			it('should stop furnace', (done) => {
 				thermostat.setTarget(70);
-				cfg.MaxRunTime = 10;
+				cfg.maxRunTime = 10;
 				clock = sinon.useFakeTimers();  
 
 				sinon.stub(tempSensor, "pollSensor", () => {
@@ -329,7 +327,7 @@ describe('Thermostat Unit Tests:', () => {
 				let minStartTimeAccountingForWindowAverageDelay = tickDelay * (windowSize);
 				clock.tick(minStartTimeAccountingForWindowAverageDelay);
 				expect(thermostat.isRunning()).is.true;
-				clock.tick(cfg.MaxRunTime);
+				clock.tick(cfg.maxRunTime);
 				expect(thermostat.isRunning()).is.false;
 
 				done();
@@ -339,8 +337,8 @@ describe('Thermostat Unit Tests:', () => {
 		describe('when furnace stops running, it', () => {
 			it('should not run again until at least MinDelayBetweenRuns later', (done) => {
 				thermostat.setTarget(70);
-				cfg.MaxRunTime = 1;
-				cfg.MinDelayBetweenRuns = 10;
+				cfg.maxRunTime = 1;
+				cfg.minDelayBetweenRuns = 10;
 				let offMillis: number = null;
 
 				enum TestState {
@@ -357,7 +355,7 @@ describe('Thermostat Unit Tests:', () => {
 					}
 					else if(testState == TestState.Stopped) {
 						let now = Date.now();
-						expect(now).is.gte(offMillis + cfg.MinDelayBetweenRuns);
+						expect(now).is.gte(offMillis + cfg.minDelayBetweenRuns);
 						done();
 					}
 				});
@@ -387,7 +385,7 @@ describe('Thermostat Unit Tests:', () => {
 			it('should stop air conditioner', (done) => {
 				thermostat.setTarget(70);
 				thermostat.setMode(ThermostatMode.Cooling);
-				cfg.MaxRunTime = 10;
+				cfg.maxRunTime = 10;
 				clock = sinon.useFakeTimers();  
 
 				sinon.stub(tempSensor, "pollSensor", () => {
@@ -399,7 +397,7 @@ describe('Thermostat Unit Tests:', () => {
 				let minStartTimeAccountingForWindowAverageDelay = tickDelay * (windowSize);
 				clock.tick(minStartTimeAccountingForWindowAverageDelay);
 				expect(thermostat.isRunning()).is.true;
-				clock.tick(cfg.MaxRunTime);
+				clock.tick(cfg.maxRunTime);
 				expect(thermostat.isRunning()).is.false;
 				
 				done();
@@ -410,8 +408,8 @@ describe('Thermostat Unit Tests:', () => {
 			it('should not run again until at least MinDelayBetweenRuns later', (done) => {
 				thermostat.setTarget(70);
 				thermostat.setMode(ThermostatMode.Cooling);
-				cfg.MaxRunTime = 1;
-				cfg.MinDelayBetweenRuns = 5;
+				cfg.maxRunTime = 1;
+				cfg.minDelayBetweenRuns = 5;
 				let offMillis: number = null;
 
 				enum TestState {
@@ -427,7 +425,7 @@ describe('Thermostat Unit Tests:', () => {
 						testState = TestState.Started;
 					}
 					else if(testState == TestState.Stopped) {
-						expect(Date.now()).is.gte(offMillis + cfg.MinDelayBetweenRuns);
+						expect(Date.now()).is.gte(offMillis + cfg.minDelayBetweenRuns);
 						done();
 					}
 				});
@@ -531,7 +529,7 @@ describe('Thermostat Unit Tests:', () => {
 				let iterations = 5;
 				
 				buildRunningThermostat(ThermostatMode.Heating, true).subscribe((runningThermostat) => {
-					runningThermostat.configuration.TempEmitDelay = tempEmitDelay;
+					runningThermostat.configuration.tempEmitDelay = tempEmitDelay;
 					let lastNow: number = null;
 					let msgCount = 0;
 					let received: boolean = false;

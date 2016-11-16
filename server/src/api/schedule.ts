@@ -1,18 +1,13 @@
 import * as cron from 'cron';
 
-export interface IScheduleItem {
-	time: string;
-	temperature: number;
+import { IScheduleConfiguration, IScheduleItem } from './configuration';
+
+export interface IScheduler {
+	initSchedule: {(callback: {(temperature)})};
 }
 
-export interface ISchedule {
-	timezone: string;
-	weekdays: Array<IScheduleItem>;
-	weekends: Array<IScheduleItem>;
-}
-
-export class Scheduler {
-	constructor(private _schedule: ISchedule) {}
+export class Scheduler implements IScheduler {
+	constructor(private _schedule: IScheduleConfiguration) {}
 
 	initSchedule(callback: {(temperature): void}) {
 		this._schedule.weekdays.forEach((item) => {

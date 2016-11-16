@@ -3,6 +3,10 @@
 		"port": 3000,
 		"type": "sim"
 	},
+	"pins": {
+		"tempSensor": 4,
+		"furnaceTrigger": 15
+	},
 	"thermostat": {
 		"defaultMode": "Heating",
 		"heatingTargetRange": [60,75],
