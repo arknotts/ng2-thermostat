@@ -35,7 +35,7 @@ export class Thermostat implements IThermostat {
                 private _furnaceTrigger: ITrigger, 
                 private _acTrigger: ITrigger) {
 				
-        this.setMode(configuration.defaultMode);
+        this.setMode((<any>ThermostatMode)[configuration.defaultMode]);
 		this._eventObservers = [];
         this.eventStream = Rx.Observable.create((observer: Rx.Observer<IThermostatEvent>) => {
             this._eventObservers.push(observer);
