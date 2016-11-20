@@ -3,7 +3,7 @@ import { ThermostatMode } from '../../../common/thermostatMode';
 export interface IThermostatConfiguration {
 	heatingTargetRange: Array<number>;
 	coolingTargetRange: Array<number>;
-    defaultMode: ThermostatMode;
+    defaultMode: string;
     maxOvershootTemp: number;
     maxRunTime: number;
     minDelayBetweenRuns: number;
@@ -15,7 +15,7 @@ export class ThermostatConfiguration implements IThermostatConfiguration {
 
     constructor(public heatingTargetRange: Array<number>,
                 public coolingTargetRange: Array<number>,
-                public defaultMode: ThermostatMode,
+                public defaultMode: string,
                 public maxOvershootTemp: number,
                 public maxRunTime: number,
                 public minDelayBetweenRuns: number,

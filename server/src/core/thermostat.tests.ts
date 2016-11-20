@@ -29,18 +29,20 @@ describe('Thermostat Unit Tests:', () => {
 
     let clock: Sinon.SinonFakeTimers;
 
-    function buildThermostat(mode: ThermostatMode): Thermostat {
+    function buildThermostat(mode: ThermostatMode = null, cfgOverride: IThermostatConfiguration = null): Thermostat {
         heatingRange = [55,75];
         coolingRange = [68,80];
 
-        cfg = new ThermostatConfiguration(heatingRange, coolingRange, ThermostatMode.Heating, 1, 2000, 5, tickDelay, 5000);
+		cfg = cfgOverride || new ThermostatConfiguration(heatingRange, coolingRange, "Heating", 1, 2000, 5, tickDelay, 5000);
 
         tempSensor = new MockTempSensor(tickDelay);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
         furnaceTrigger = new FurnaceTrigger();
         acTrigger = new AcTrigger();
         thermostat = new Thermostat(cfg, tempRdr, furnaceTrigger, acTrigger);
-        thermostat.setMode(mode);
+		if(mode) {
+        	thermostat.setMode(mode);
+		}
         
         return thermostat;
     }
@@ -107,9 +109,17 @@ describe('Thermostat Unit Tests:', () => {
 				
 				done();
 			});
-		});
 
-		
+			it('should default to mode specified in configuration', (done) => {
+				expect(thermostat.mode).to.equal(ThermostatMode.Heating);
+
+				let coolingCfg = new ThermostatConfiguration(heatingRange, coolingRange, "Cooling", 1, 2000, 5, tickDelay, 5000);
+				buildThermostat(null, coolingCfg);
+				expect(thermostat.mode).to.equal(ThermostatMode.Cooling);
+
+				done();
+			});
+		});
 
 		describe('setting target outside bounds', () => {
 			it('should set to closest valid value', (done) => {
