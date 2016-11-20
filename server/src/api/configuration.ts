@@ -45,19 +45,6 @@ export class Configuration {
 
 			let configuration: IConfiguration = JSON.parse(<any>data);
 			onLoad(configuration);
-
-			// let configuration: IThermostatConfiguration = new ThermostatConfiguration(
-			// 	config.thermostat.heatingTargetRange,
-			// 	config.thermostat.coolingTargetRange,
-			// 	(<any>ThermostatMode)[config.thermostat.defaultMode],
-			// 	config.thermostat.maxOvershootTemp,
-			// 	config.thermostat.maxRunTime,
-			// 	config.thermostat.minDelayBetweenRuns,
-			// 	config.thermostat.tempSensorPollDelay,
-			// 	config.thermostat.tempEmitDelay
-			// );
-
-			
 		});
 	}
 }
