@@ -34,8 +34,8 @@ export class ThermostatBuilder {
 		else if(type.toLowerCase() == 'sim') {
 			tempSensor = new SimTempSensor(this._thermostatConfiguration.tempSensorPollDelay, -.2, 70);
 			tempReader = new MovingAverageTempReader(tempSensor, 3);
-			// furnaceTrigger = new SimTrigger(this._io, this._simTempSensor);
-			// acTrigger = new SimTrigger(this._io, this._simTempSensor);
+			furnaceTrigger = new SimTrigger(<SimTempSensor>tempSensor);
+			acTrigger = new SimTrigger(<SimTempSensor>tempSensor);
 		}
 		else {
 			throw `Unknown thermostat type '${type}'`;
