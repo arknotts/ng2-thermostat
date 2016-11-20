@@ -3,21 +3,18 @@ import * as sinon from 'sinon';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
-import { ITempSensorConfiguration, TempSensorConfiguration } from './configuration';
 
 var expect = chai.expect;
 
 describe('Moving Average Temp Reader Unit Tests:', () => {
 
-    let tempSensorCfg: ITempSensorConfiguration;
     let tempSensor: ITempSensor;
     let tempRdr: ITempReader;
 
     let windowSize = 3;
 
     beforeEach(function() {
-        tempSensorCfg = new TempSensorConfiguration(1);
-        tempSensor = new MockTempSensor(tempSensorCfg);
+        tempSensor = new MockTempSensor(1);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
     });
 

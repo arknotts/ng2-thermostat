@@ -2,8 +2,6 @@ var environment = process.env.NODE_ENV;
 var dht: any = environment && environment.toUpperCase() == 'PRODUCTION' ? require('node-dht-sensor') : null;
 import Rx = require('rxjs');
 
-import { ITempSensorConfiguration } from './configuration';
-
 export interface ITempSensor {
     start(): Rx.Observable<number>;
     stop(): void;
@@ -13,8 +11,11 @@ export interface ITempSensor {
 export abstract class BaseTempSensor implements ITempSensor {
     private _start: boolean = false;
     private _timeoutId: any;
+	private _temperatureSensorPollDelay: number;
 
-    constructor(private _configuration: ITempSensorConfiguration) {}
+    constructor(temperatureSensorPollDelay: number) {
+		this._temperatureSensorPollDelay = temperatureSensorPollDelay;
+	}
     
     start(): Rx.Observable<number> {
         this._start = true;
@@ -33,7 +34,7 @@ export abstract class BaseTempSensor implements ITempSensor {
     private pollAndEmitTemperature(observer: Rx.Observer<number>): void {
         if(this._start) {
             observer.next(this.pollSensor());
-            this._timeoutId = setTimeout(() => { this.pollAndEmitTemperature(observer); }, this._configuration.TemperatureSensorPollDelay);
+            this._timeoutId = setTimeout(() => { this.pollAndEmitTemperature(observer); }, this._temperatureSensorPollDelay);
         }
         else {
             clearTimeout(this._timeoutId);
@@ -44,8 +45,8 @@ export abstract class BaseTempSensor implements ITempSensor {
 
 export class Dht11TempSensor extends BaseTempSensor {
 
-    constructor(_configuration: ITempSensorConfiguration, private _gpioPin: number) {
-        super(_configuration);
+    constructor(temperatureSensorPollDelay: number, private _gpioPin: number) {
+        super(temperatureSensorPollDelay);
 
         if(!dht.initialize(11, _gpioPin)) {
             throw 'Error initializing DHT11 temperature sensor';
@@ -63,8 +64,8 @@ export class Dht11TempSensor extends BaseTempSensor {
 }
 
 export class MockTempSensor extends BaseTempSensor {
-    constructor(_configuration: ITempSensorConfiguration) {
-        super(_configuration);
+    constructor(temperatureSensorPollDelay: number) {
+        super(temperatureSensorPollDelay);
     }
 
     pollSensor(): number {

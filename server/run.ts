@@ -1,56 +1,48 @@
-import * as fs from 'fs';
+import * as http from 'http';
+import * as socketIo from 'socket.io';
 
-import { IThermostatConfiguration, ThermostatConfiguration } from './src/core/configuration';
-import { ThermostatMode } from '../common/thermostatMode';
+import { Configuration } from './src/api/configuration';
+import { Thermostat } from './src/core/thermostat';
 
-import { BaseServer } from './src/api/baseServer';
-import { RestServer } from './src/api/restServer';
-import { SimServer } from './src/api/simServer';
-import { ISchedule, Scheduler } from './src/api/schedule';
+import { ThermostatServer } from './src/api/thermostatServer';
+import { Scheduler } from './src/api/schedule';
 import { IBroadcaster, MqttBroadcaster } from './src/api/broadcaster';
+import { ThermostatBuilder } from './src/api/thermostatBuilder';
 
-fs.readFile(`${__dirname}/thermostat.config.json`, (err, data) => {
-	if(err) throw err;
 
-	let config = JSON.parse(<any>data);
-	let thermostatConfig: any = config.thermostat;
-	let serverConfig: any = config.server;
-	let schedule: ISchedule = config.schedule;
-	let broadcasterConfig: any = config.broadcaster;
+Configuration.Load(`${__dirname}/thermostat.config.json`, (config) => {
+	let server: ThermostatServer;
+	let httpServer: http.Server;
+    let io: SocketIO.Server;
+	let thermostat: Thermostat;
 
-	let configuration: IThermostatConfiguration = new ThermostatConfiguration(
-		thermostatConfig.heatingTargetRange,
-		thermostatConfig.coolingTargetRange,
-		(<any>ThermostatMode)[thermostatConfig.defaultMode],
-		thermostatConfig.maxOvershootTemp,
-		thermostatConfig.maxRunTime,
-		thermostatConfig.minDelayBetweenRuns,
-		{
-			TemperatureSensorPollDelay: thermostatConfig.tempSensorPollDelay
-		},
-		thermostatConfig.tempEmitDelay
-	);
+	httpServer = http.createServer((req: any, res: any) => {
+		res.writeHead(200, { 'Content-Type': 'text/html' });
+		res.end(`<h1>Welcome to node-thermostat.</h1><h3>Connect via a web socket at ws://localhost:${this._port}`, 'utf-8');
+	});
 
-	let broadcaster: IBroadcaster = null;
-	let server: BaseServer;
+	httpServer.listen(config.server.port, () => {
+	     console.log(`Socket listening on port ${config.server.port}`);
+	});
 
-	if(broadcasterConfig.type == 'mqtt') {
-		broadcaster = new MqttBroadcaster(broadcasterConfig.brokerUrl,
-										  broadcasterConfig.username,
-										  broadcasterConfig.password);
+	io = socketIo(httpServer);
+
+	thermostat = new ThermostatBuilder(config.thermostat, config.pins).buildThermostat(config.server.type);
+
+	if(config.server.type.toLowerCase() == 'rest') {
+		let broadcaster = new MqttBroadcaster(
+						config.broadcaster.brokerUrl,
+						config.broadcaster.username,
+						config.broadcaster.password);
+		let scheduler = new Scheduler(config.schedule);
+		server = new ThermostatServer(io, thermostat, broadcaster, scheduler);
 	}
-
-	if(serverConfig.type.toLowerCase() == 'rest') {
-		server = new RestServer(configuration, broadcaster, new Scheduler(schedule));
-	}
-	else if(serverConfig.type.toLowerCase() == 'sim') {
-		server = new SimServer(configuration);
+	else if(config.server.type.toLowerCase() == 'sim') {
+		server = new ThermostatServer(io, thermostat, null, null);
 	}
 	else {
-		throw `Unknown server type \'${serverConfig.type}\' in configuration file.`;
+		throw `Unknown thermostat type '${config.server.type}'`;
 	}
 
 	server.start();
 });
-
-
