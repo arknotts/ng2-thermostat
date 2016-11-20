@@ -111,11 +111,17 @@ describe('Thermostat Unit Tests:', () => {
 			});
 
 			it('should default to mode specified in configuration', (done) => {
+				let thisCfg = new ThermostatConfiguration(heatingRange, coolingRange, "Heating", 1, 2000, 5, tickDelay, 5000);
+				buildThermostat(null, thisCfg);
 				expect(thermostat.mode).to.equal(ThermostatMode.Heating);
 
-				let coolingCfg = new ThermostatConfiguration(heatingRange, coolingRange, "Cooling", 1, 2000, 5, tickDelay, 5000);
-				buildThermostat(null, coolingCfg);
+				thisCfg.defaultMode = "Cooling";
+				buildThermostat(null, thisCfg);
 				expect(thermostat.mode).to.equal(ThermostatMode.Cooling);
+				
+				thisCfg.defaultMode = "Off";
+				buildThermostat(null, thisCfg);
+				expect(thermostat.mode).to.equal(ThermostatMode.Off);
 
 				done();
 			});
