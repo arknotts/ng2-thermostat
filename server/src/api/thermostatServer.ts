@@ -1,13 +1,7 @@
-import * as http from 'http';
-import * as socketIo from 'socket.io';
-
 import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { IThermostat } from '../core/thermostat';
-import { IThermostatConfiguration } from '../core/configuration';
-import { ITempReader } from '../core/tempReader';
-import { ITrigger } from '../core/trigger';
 
 import { IBroadcaster } from './broadcaster';
 import { IScheduler } from './schedule';

@@ -1,10 +1,8 @@
-import * as fs from 'fs';
 import * as http from 'http';
 import * as socketIo from 'socket.io';
 
 import { Configuration } from './src/api/configuration';
 import { Thermostat } from './src/core/thermostat';
-import { ThermostatMode } from '../common/thermostatMode';
 
 import { ThermostatServer } from './src/api/thermostatServer';
 import { Scheduler } from './src/api/schedule';
@@ -16,7 +14,6 @@ Configuration.Load(`${__dirname}/thermostat.config.json`, (config) => {
 	let server: ThermostatServer;
 	let httpServer: http.Server;
     let io: SocketIO.Server;
-	let broadcaster: IBroadcaster;
 	let thermostat: Thermostat;
 
 	httpServer = http.createServer((req: any, res: any) => {

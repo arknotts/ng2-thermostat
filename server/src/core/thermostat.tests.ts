@@ -10,7 +10,7 @@ import { ITempSensor, MockTempSensor } from './tempSensor';
 import { Thermostat } from './thermostat';
 import { IThermostatConfiguration, ThermostatConfiguration } from './configuration';
 import { ITrigger, FurnaceTrigger, AcTrigger } from './trigger';
-import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
+import { IThermostatEvent } from '../../../common/thermostatEvent';
 
 describe('Thermostat Unit Tests:', () => {
 
