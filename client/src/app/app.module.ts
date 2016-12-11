@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
-import { APP_CONFIG, THERMOSTAT_CONFIG } from'../app.config';
+import { APP_CONFIG, GetConfig } from'../app.config';
 import { ThermostatService } from './thermostat.service';
 import { AppComponent } from './app.component';
 
@@ -17,7 +17,7 @@ import { AppComponent } from './app.component';
     HttpModule,
   ],
   providers: [
-    {provide: APP_CONFIG, useValue: THERMOSTAT_CONFIG},
+    {provide: APP_CONFIG, useValue: GetConfig()},
     ThermostatService
   ],
   bootstrap: [AppComponent]
