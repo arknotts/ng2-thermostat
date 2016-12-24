@@ -15,7 +15,7 @@ export class Scheduler implements IScheduler {
 		});
 
 		this._schedule.weekends.forEach((item) => {
-			this.initCronJob(item, 'SAT-SUN', callback);
+			this.initCronJob(item, 'SAT,SUN', callback);
 		});
 	}
 

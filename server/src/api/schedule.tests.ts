@@ -7,7 +7,12 @@ import { Scheduler } from './schedule';
 
 describe('Schedule Unit Tests:', () => {
 	const DATE_MONDAY: Date = new Date(2016, 10, 14);
+	const DATE_TUESDAY: Date = new Date(2016, 10, 15);
+	const DATE_WEDNESDAY: Date = new Date(2016, 10, 16);
+	const DATE_THURSDAY: Date = new Date(2016, 10, 17);
+	const DATE_FRIDAY: Date = new Date(2016, 10, 18);
 	const DATE_SATURDAY: Date = new Date(2016, 10, 19);
+	const DATE_SUNDAY: Date = new Date(2016, 10, 20);
 
 	let scheduleConfig: IScheduleConfiguration;
 	let scheduler: Scheduler;
@@ -38,14 +43,44 @@ describe('Schedule Unit Tests:', () => {
 		}
 	});
 
-	it('should schedule all weekday temperature changes for every weekday', (done) => {
+	it('should schedule all weekday temperature changes on Monday', (done) => {
 		clock = sinon.useFakeTimers(DATE_MONDAY.getTime());
 		testSchedule(scheduleConfig.weekdays);
 		done();
 	});
 
-	it('should schedule all weekend temperature changes for Saturday and Sunday', (done) => {
+	it('should schedule all weekday temperature changes on Tuesday', (done) => {
+		clock = sinon.useFakeTimers(DATE_TUESDAY.getTime());
+		testSchedule(scheduleConfig.weekdays);
+		done();
+	});
+
+	it('should schedule all weekday temperature changes on Wednesday', (done) => {
+		clock = sinon.useFakeTimers(DATE_WEDNESDAY.getTime());
+		testSchedule(scheduleConfig.weekdays);
+		done();
+	});
+
+	it('should schedule all weekday temperature changes on Thursday', (done) => {
+		clock = sinon.useFakeTimers(DATE_THURSDAY.getTime());
+		testSchedule(scheduleConfig.weekdays);
+		done();
+	});
+
+	it('should schedule all weekday temperature changes on Friday', (done) => {
+		clock = sinon.useFakeTimers(DATE_FRIDAY.getTime());
+		testSchedule(scheduleConfig.weekdays);
+		done();
+	});
+
+	it('should schedule all weekend temperature changes on Saturday', (done) => {
 		clock = sinon.useFakeTimers(DATE_SATURDAY.getTime());
+		testSchedule(scheduleConfig.weekends);
+		done();
+	});
+
+	it('should schedule all weekend temperature changes on Sunday', (done) => {
+		clock = sinon.useFakeTimers(DATE_SUNDAY.getTime());
 		testSchedule(scheduleConfig.weekends);
 		done();
 	});
