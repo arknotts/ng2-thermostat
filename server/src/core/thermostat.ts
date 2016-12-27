@@ -72,7 +72,7 @@ export class Thermostat implements IThermostat {
            this.stopTrigger();
         }
 		
-        if(this.isFirstRun() || Date.now() - this._stopTime.getTime() > this.configuration.minDelayBetweenRuns) {
+        if((this.isFirstRun() || Date.now() - this._stopTime.getTime() > this.configuration.minDelayBetweenRuns) && !this.isRunning()) {
             this._targetOvershootBy = Math.min(Math.abs(this.target - temp), this.configuration.maxOvershootTemp)
             this.startTrigger();
         }
