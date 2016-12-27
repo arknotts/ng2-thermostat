@@ -144,51 +144,46 @@ describe('Thermostat Unit Tests:', () => {
 	describe('furnace spec', () => {
 		describe('temperature dropping below target', () => {
 			it('should start furnace', (done) => {
-				let temperatureValues = [71,70,69,68,67,66,65,64,63];
+				let temperature$ = Rx.Observable.from([72,71,70,69,68]);
 				thermostat.setTarget(70);
 
-				sinon.stub(tempSensor, "pollSensor", function() {
-					return temperatureValues.shift();
-				});
+				sinon.stub(tempRdr, "start", () => temperature$);
 
 				let startCalled: boolean = false;
-				sinon.stub(furnaceTrigger, "start", function() {
+				sinon.stub(furnaceTrigger, "start", () => {
 					startCalled = true;
-					done();
 				});
 
 				thermostat.start();
+
+				temperature$.subscribe(
+					null, null,
+					() => {
+						expect(startCalled).to.be.true;
+						done();
+					}
+				)
 			});
 		});
 
 		describe('temperature staying above target', () => {
 			it('should not start furnace', (done) => {
-				let temperatureValues = [71,70,70,70,71,70,70,72,71];
+				let temperature$ = Rx.Observable.from([71,70,70,70,71,70,70,72,71]);
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
-				let finished: boolean = false;
 
-				sinon.stub(tempSensor, "pollSensor", () => {
-					if(temperatureValues.length > 0) {
-						return temperatureValues.shift();
-					}
-					else if(!startCalled && !finished) {
-						done();
-						finished = true;
-					}
-					else {
-						if(!finished) {
-							done("furnace started when it shouldn't have");
-							finished = true;
-						}
-					}
-				});
-				
-				sinon.stub(furnaceTrigger, "start", function() {
-					startCalled = true;
-				});
+				sinon.stub(tempRdr, "start", () => temperature$);
+				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
 
 				thermostat.start();
+
+				temperature$.subscribe(
+					null, null,
+					() => {
+						expect(startCalled).to.be.false;
+						done();
+					}
+				)
 			});
 		});
 
@@ -200,128 +195,100 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature rising above target + overshoot temp', () => {
 			it('should stop furnace', (done) => {
-				let temperatureValues = [67,68,69,70,71,72,73,74,75,76,77];
+				let temperature$ = Rx.Observable.from([67,68,69,70,71,72,73,74,75,76,77]);
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
 
-				sinon.stub(tempSensor, "pollSensor", () => {
-					if(temperatureValues.length > 0) {
-						return temperatureValues.shift();
-					}
-					else if(!stopCalled) {
-						done("Stop furnace never called.");
-					}
-				});
-				
-				sinon.stub(furnaceTrigger, "start", function() {
-					startCalled = true;
-				});
-
-				sinon.stub(furnaceTrigger, "stop", function() {
-					if(!stopCalled) {
-						stopCalled = true;
-						if(startCalled) {
-						done();
-						}
-						else {
-							done("Stop furnace called before start.");
-						}
-					}
-				});
+				sinon.stub(tempRdr, "start", () => temperature$);
+				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
+				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);
 
 				thermostat.start();
+
+				temperature$.subscribe(
+					null, null,
+					() => {
+						expect(startCalled).to.be.true;
+						expect(stopCalled).to.be.true;
+						done();
+					}
+				)
 			});
 		});
 	});
 
 
 	describe('air conditioning spec', () => {
+		beforeEach(() => {
+			thermostat.setMode(ThermostatMode.Cooling);
+		});
+
 		describe('temperature rising above target', () => {
 			it('should start air conditioner', (done) => {
-				let temperatureValues = [66,67,68,69,70,71,72,73,74,75,76,77];
-				thermostat.setMode(ThermostatMode.Cooling);
+				let temperatureValues = [69,70,71,72];
 				thermostat.setTarget(70);
 
-				sinon.stub(tempSensor, "pollSensor", function() {
-					return temperatureValues.shift();
-				});
-
-				let startCalled: boolean = false;
-				sinon.stub(acTrigger, "start", function() {
-					startCalled = true;
-					done();
-				});
+				sinon.stub(tempRdr, "start", () => Rx.Observable.from(temperatureValues));
+				sinon.stub(acTrigger, "start", done());
 
 				thermostat.start();
 			});
 		});
 
-		describe('temperature staying below target', () => {
+		describe('temperature staying at or below target', () => {
 			it('should not start air conditioner', (done) => {
-				let temperatureValues = [71,70,69,70,71,70,70,72,71];
-				thermostat.setMode(ThermostatMode.Cooling);
+				let obs = Rx.Observable.from([71,70,69,70,71,70,70,72,73,72,71]);
+				
 				thermostat.setTarget(73);
 				let startCalled: boolean = false;
-				let allDone: boolean = false;
 
-				sinon.stub(tempSensor, "pollSensor", () => {
-					if(temperatureValues.length > 0) {
-						return temperatureValues.shift();
-					}
-					else if(!startCalled) {
-						if(!allDone) {
-							done();
-							allDone = true;
-						}
-					}
-					else {
-						done("air conditioner started when it shouldn't have");
-					}
-				});
-				
-				sinon.stub(acTrigger, "start", function() {
-					startCalled = true;
-				});
+				sinon.stub(tempRdr, "start", () => obs);
+				sinon.stub(acTrigger, "start", () => startCalled = true);
 
 				thermostat.start();
+
+				obs.subscribe(
+					null, null,
+					() => {
+						expect(startCalled).to.be.false;
+						done();
+					}
+				);
 			});
 		});
 
 		describe('temperature falling below target - overshoot temp', () => {
 			it('should stop air conditioner', (done) => {
-				let temperatureValues = [77,76,75,74,73,72,71,70,69,68,67,66,65];
-				thermostat.setMode(ThermostatMode.Cooling);
+				let obs = Rx.Observable.from([77,76,75,74,73,72,71,70,69,68,67,66,65]);
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
 
-				sinon.stub(tempSensor, "pollSensor", () => {
-					if(temperatureValues.length > 0) {
-						return temperatureValues.shift();
-					}
-					else if(!stopCalled) {
-						done("Stop air conditioner never called.");
-					}
-				});
-				
-				sinon.stub(acTrigger, "start", function() {
-					startCalled = true;
-				});
-
-				sinon.stub(acTrigger, "stop", function() {
-					if(!stopCalled) {
+				sinon.stub(tempRdr, "start", () => obs);
+				sinon.stub(acTrigger, "start", () => startCalled = true);
+				sinon.stub(acTrigger, "stop", () => {
+					if(startCalled) {
 						stopCalled = true;
-						if(startCalled) {
-							done();
-						}
-						else {
-							done("Stop air conditioner called before start.");
-						}
+					}
+					else {
+						done("Stop air conditioner called before start.");
 					}
 				});
 
 				thermostat.start();
+
+				obs.subscribe(
+					null, null,
+					() => {
+						if(stopCalled) {
+							done();
+						}
+						else {
+							done("Stop never called");
+						}
+					}
+				)
 			});
 		});
 	});
@@ -333,18 +300,21 @@ describe('Thermostat Unit Tests:', () => {
 				thermostat.setTarget(70);
 				cfg.maxRunTime = 10;
 				clock = sinon.useFakeTimers();  
+				let startCalled: boolean = false;
+				let stopCalled: boolean = false;
 
-				sinon.stub(tempSensor, "pollSensor", () => {
-					return thermostat.target - 5;
-				});
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => 65));
+				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
+				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);				
 
 				thermostat.start();
+				
+				clock.tick(cfg.maxRunTime - 1);
+				expect(startCalled).to.be.true;
+				expect(stopCalled).to.be.false;
 
-				let minStartTimeAccountingForWindowAverageDelay = tickDelay * (windowSize);
-				clock.tick(minStartTimeAccountingForWindowAverageDelay);
-				expect(thermostat.isRunning()).is.true;
-				clock.tick(cfg.maxRunTime);
-				expect(thermostat.isRunning()).is.false;
+				clock.tick(cfg.maxRunTime + 1);
+				expect(stopCalled).to.be.true;
 
 				done();
 			});
@@ -355,115 +325,111 @@ describe('Thermostat Unit Tests:', () => {
 				thermostat.setTarget(70);
 				cfg.maxRunTime = 1;
 				cfg.minDelayBetweenRuns = 10;
-				let offMillis: number = null;
+				let startCalled: boolean = false;
+				let stopCalled: boolean = false;
+				clock = sinon.useFakeTimers();
 
-				enum TestState {
-					NotYetStarted,
-					Started,
-					Stopped
-				}
-
-				let testState = TestState.NotYetStarted;
-
-				sinon.stub(furnaceTrigger, "start", function() {
-					if(testState == TestState.NotYetStarted) {
-						testState = TestState.Started;
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => {
+					if(startCalled) {
+						if(stopCalled) {
+							//started, then stopped, need to try and start again
+							return 65;
+						}
+						else {
+							//started but not stopped yet
+							return 75;
+						}
 					}
-					else if(testState == TestState.Stopped) {
-						let now = Date.now();
-						expect(now).is.gte(offMillis + cfg.minDelayBetweenRuns);
-						done();
-					}
-				});
-
-				sinon.stub(furnaceTrigger, "stop", function() {
-					testState = TestState.Stopped;
-					offMillis = Date.now();
-				});
-
-				sinon.stub(tempSensor, "pollSensor", () => {
-					if(testState == TestState.NotYetStarted) {
-						return thermostat.target - 5; //start it
-					}
-					else if(testState == TestState.Started) {
-						return thermostat.target + 5; //turn it right back off
-					}
-					else if(testState == TestState.Stopped) {
-						return thermostat.target - 5; //try and start it again
-					}
-				});
+					
+					return 65;
+				}));
+				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
+				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);
 
 				thermostat.start();
+
+				clock.tick(1);
+				expect(startCalled).to.be.true;
+				startCalled = false;
+				clock.tick(2);
+				expect(stopCalled).to.be.true;
+
+				clock.tick(cfg.minDelayBetweenRuns - 1);
+				expect(startCalled).to.be.false;
+				clock.tick(10);
+				expect(startCalled).to.be.true;
+
+				done();
 			});
 		});
 
 		describe('air conditioner running for longer than max run time', () => {
 			it('should stop air conditioner', (done) => {
-				thermostat.setTarget(70);
 				thermostat.setMode(ThermostatMode.Cooling);
+				thermostat.setTarget(70);
 				cfg.maxRunTime = 10;
 				clock = sinon.useFakeTimers();  
+				let startCalled: boolean = false;
+				let stopCalled: boolean = false;
 
-				sinon.stub(tempSensor, "pollSensor", () => {
-					return thermostat.target + 5;
-				});
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => 75));
+				sinon.stub(acTrigger, "start", () => startCalled = true);
+				sinon.stub(acTrigger, "stop", () => stopCalled = true);				
 
 				thermostat.start();
-
-				let minStartTimeAccountingForWindowAverageDelay = tickDelay * (windowSize);
-				clock.tick(minStartTimeAccountingForWindowAverageDelay);
-				expect(thermostat.isRunning()).is.true;
-				clock.tick(cfg.maxRunTime);
-				expect(thermostat.isRunning()).is.false;
 				
+				clock.tick(cfg.maxRunTime - 1);
+				expect(startCalled).to.be.true;
+				expect(stopCalled).to.be.false;
+
+				clock.tick(cfg.maxRunTime + 1);
+				expect(stopCalled).to.be.true;
+
 				done();
 			});
 		});
 
 		describe('when air conditioner stops running, it', () => {
 			it('should not run again until at least MinDelayBetweenRuns later', (done) => {
-				thermostat.setTarget(70);
 				thermostat.setMode(ThermostatMode.Cooling);
+				thermostat.setTarget(70);
 				cfg.maxRunTime = 1;
-				cfg.minDelayBetweenRuns = 5;
-				let offMillis: number = null;
+				cfg.minDelayBetweenRuns = 10;
+				let startCalled: boolean = false;
+				let stopCalled: boolean = false;
+				clock = sinon.useFakeTimers();
 
-				enum TestState {
-					NotYetStarted,
-					Started,
-					Stopped
-				}
-
-				let testState = TestState.NotYetStarted;
-
-				sinon.stub(acTrigger, "start", function() {
-					if(testState == TestState.NotYetStarted) {
-						testState = TestState.Started;
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => {
+					if(startCalled) {
+						if(stopCalled) {
+							//started, then stopped, need to try and start again
+							return 75;
+						}
+						else {
+							//started but not stopped yet
+							return 65;
+						}
 					}
-					else if(testState == TestState.Stopped) {
-						expect(Date.now()).is.gte(offMillis + cfg.minDelayBetweenRuns);
-						done();
-					}
-				});
-
-				sinon.stub(acTrigger, "stop", function() {
-					testState = TestState.Stopped;
-					offMillis = Date.now();
-				});
-
-				sinon.stub(tempSensor, "pollSensor", () => {
-					if(testState == TestState.NotYetStarted) {
-						return thermostat.target + 5; //start it
-					}
-					else if(testState == TestState.Started) {
-						return thermostat.target - 5; //turn it right back off
-					}
-					else if(testState == TestState.Stopped) {
-						return thermostat.target + 5; //try and start it again
-					}
-				});
+					
+					return 75;
+				}));
+				sinon.stub(acTrigger, "start", () => startCalled = true);
+				sinon.stub(acTrigger, "stop", () => stopCalled = true);
 
 				thermostat.start();
+
+				clock.tick(1);
+				expect(startCalled).to.be.true;
+				startCalled = false;
+				clock.tick(2);
+				expect(stopCalled).to.be.true;
+
+				clock.tick(cfg.minDelayBetweenRuns - 1);
+				expect(startCalled).to.be.false;
+				clock.tick(10);
+				expect(startCalled).to.be.true;
+
+				done();
 			});
 		});
 	});

@@ -63,6 +63,7 @@ export class Thermostat implements IThermostat {
 
     stop() {
         this._tempReader.stop();
+		this.emitComplete();
 		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Stopped');
     }
 
