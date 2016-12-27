@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 import * as sinon from 'sinon';
+import * as Rx from 'rxjs';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
@@ -18,38 +19,42 @@ describe('Moving Average Temp Reader Unit Tests:', () => {
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
     });
 
+	describe('initialization', () => {
+		it('should not emit a value until the window size has been filled', (done) => {
+			let sensorValues: Array<number> = [68,69,70,71,72];
+
+            sinon.stub(tempSensor, "start", function() {
+                return Rx.Observable.from(sensorValues);
+            });
+			
+            tempRdr.start().first().subscribe(
+				(temp) => { 
+					expect(temp).equals(69);
+				},
+				() => {},
+				() => done()
+			);
+		});
+	});
+
     describe('adding multiple values', () => {
         it('should take the average', (done) => {
-            let values: Array<number> = [68,69,70,71,72];
-            let numValues = values.length;
-            let expectedAvgs: Array<number> = new Array<number>();
-            
-            let numWindows = numValues-windowSize+1;
+            let sensorValues: Array<number> = [68,69,70,71,72];
+			let expectedValues: Array<number> = [69,70,71];
 
-            for(var windowStart=0; windowStart<numWindows; windowStart++) {
-                let thisAvg = 0;
-                for(var i=windowStart; i<windowStart+windowSize; i++) {
-                    thisAvg += values[i];
-                }
-                expectedAvgs.push(thisAvg/windowSize);
-            }
-
-            sinon.stub(tempSensor, "pollSensor", function() {
-                return values.shift();
+            sinon.stub(tempSensor, "start", function() {
+                return Rx.Observable.from(sensorValues);
             });
-
-            let count = 0;
-            tempRdr.start().subscribe((temp) => { 
-				if(!isNaN(temp)) {
-					expect(temp).equals(expectedAvgs[count]);
-				}
-				count++;
-
-				if(count == numWindows-1) 
-				{
-					done();
-				}
-			});
+			
+            tempRdr.start().subscribe(
+				(temp) => { 
+					if(expectedValues.length > 0) {
+						expect(temp).equals(expectedValues.shift());
+					}
+				},
+				() => {},
+				() => done()
+			);
         });
     });
 });
