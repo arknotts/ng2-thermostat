@@ -56,6 +56,10 @@ export class Thermostat implements IThermostat {
             () => { this.emitComplete(); }
         );
 
+        tempReaderObservable.throttleTime(this.configuration.tempEmitDelay).subscribe((temperature:number) => {
+            this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Temperature, temperature.toString());
+        });
+
 		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Started');
 
         return this.eventStream;
@@ -95,8 +99,6 @@ export class Thermostat implements IThermostat {
                 this.stopTrigger();
             }
         }
-
-        this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Temperature, temp.toString());
     }
 
     private startTrigger() {
