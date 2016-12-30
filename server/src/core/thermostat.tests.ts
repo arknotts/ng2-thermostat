@@ -4,6 +4,7 @@ import * as sinon from 'sinon';
 var expect = chai.expect;
 
 import { ThermostatMode } from '../../../common/thermostatMode';
+import { ThermostatTopic } from '../../../common/thermostatEvent';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
@@ -187,9 +188,68 @@ describe('Thermostat Unit Tests:', () => {
 			});
 		});
 
-		describe.skip('starting furnace', () => {
+		describe('starting furnace', () => {
 			it('should overshoot temperature', (done) => {
+				let target = 70;
+				let temperatures = [67,68,69,70,71,72,73,74,75,76,77];
+				let temperature$ = Rx.Observable.create((observer: Rx.Observer<number>) => {
+					while(temperatures.length > 0) {
+						observer.next(temperatures.shift());
+					};
 
+					observer.complete();
+				});
+				let shouldOvershootBy = target - temperatures[0];
+				let stopTemperature: number = 0;
+				cfg.maxOvershootTemp = 4;
+				thermostat.setTarget(target);
+
+				sinon.stub(tempRdr, "start", () => temperature$);
+				sinon.stub(furnaceTrigger, "stop", () => {
+					stopTemperature = temperatures[0] - 1;
+				});
+
+				thermostat.start();
+
+				temperature$.subscribe(
+					null,
+					null,
+					() => {
+						expect(stopTemperature).to.equal(target + shouldOvershootBy);
+						done();
+					}
+				);
+			});
+
+			it('should overshoot temperature by a maximum according to configuration', (done) => {
+				cfg.maxOvershootTemp = 2;
+				let target = 70;
+				let temperatures = [66,67,68,69,70,71,72,73,74,75,76,77];
+				let temperature$ = Rx.Observable.create((observer: Rx.Observer<number>) => {
+					while(temperatures.length > 0) {
+						observer.next(temperatures.shift());
+					};
+
+					observer.complete();
+				});
+				let stopTemperature: number = 0;
+				thermostat.setTarget(target);
+
+				sinon.stub(tempRdr, "start", () => temperature$);
+				sinon.stub(furnaceTrigger, "stop", () => {
+					stopTemperature = temperatures[0] - 1;
+				});
+
+				thermostat.start();
+
+				temperature$.subscribe(
+					null,
+					null,
+					() => {
+						expect(stopTemperature).to.equal(target + cfg.maxOvershootTemp);
+						done();
+					}
+				);
 			});
 		});
 
