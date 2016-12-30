@@ -566,36 +566,34 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit a temperature message at the appropriate interval', (done) => {
 				let tempEmitDelay = 50;
 				let iterations = 5;
+				cfg.tempEmitDelay = tempEmitDelay;
+				clock = sinon.useFakeTimers();
 				
-				buildRunningThermostat(ThermostatMode.Heating, true).subscribe((runningThermostat) => {
-					runningThermostat.configuration.tempEmitDelay = tempEmitDelay;
-					let lastNow: number = null;
-					let msgCount = 0;
-					let subscription: Rx.Subscription;
-					subscription = runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
+				let lastNow: number = null;
+				let msgCount = 0;
+				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
 
-						if(e.topic.length === 3 &&
-							e.topic[0] === 'sensors' &&
-							e.topic[1] === 'temperature' &&
-							e.topic[2] === 'thermostat') {
-								let now: number = Date.now();
-								if(lastNow) {
-									let diff = Math.abs(now - lastNow);
-									expect(diff).to.be.within(0, 5);
-								}
+					if(e.topic.length === 3 &&
+						e.topic[0] === 'sensors' &&
+						e.topic[1] === 'temperature' &&
+						e.topic[2] === 'thermostat') {
+							let now: number = Date.now();
+							if(lastNow) {
+								let diff = Math.abs(now - lastNow);
+								expect(diff).to.be.within(tempEmitDelay-10, tempEmitDelay+10);
+							}
 
-								lastNow = now;
-								msgCount++;
+							lastNow = now;
+							msgCount++;
 
-								if(msgCount >= iterations) {
-									done();
-									subscription.unsubscribe();
-								}
-						}
-					}); 
-
-					runningThermostat.start();
+							if(msgCount >= iterations) {
+								done();
+							}
+					}
 				}); 
+
+				thermostat.start();
+				clock.tick(tempEmitDelay*iterations);
 			});
 		});
 
