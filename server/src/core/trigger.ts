@@ -1,5 +1,5 @@
 var environment = process.env.NODE_ENV;
-var gpio: any = environment && environment.toUpperCase() == 'PRODUCTION' ? require('rpi-gpio') : null;
+var gpio: any = environment && environment.toUpperCase() === 'PRODUCTION' ? require('rpi-gpio') : null;
 
 export interface ITrigger {
     start(): void;
@@ -12,14 +12,18 @@ export class PiGpioTrigger implements ITrigger {
     // If yours is not set _invertRelay to false.
     constructor(private _outPin: number, private _invertRelay: boolean = true) {
         gpio.setup(_outPin, gpio.DIR_OUT, (err) => {
-            if(err) throw `Error connecting to pin ${_outPin}: ${err}`;
+            if(err) {
+                throw `Error connecting to pin ${_outPin}: ${err}`;
+            }
             this.stop();
         });
     }
 
     private writeToPin(val: boolean) {
         gpio.write(this._outPin, val, function(err) {
-            if (err) throw `Error writing to pin ${this._outPin}: ${err}`;
+            if (err) {
+                throw `Error writing to pin ${this._outPin}: ${err}`;
+            }
         });
     }
 

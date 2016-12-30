@@ -23,8 +23,8 @@ export class Thermostat implements IThermostat {
 	mode: ThermostatMode;
     private _target: number;
     private _targetOvershootBy: number;
-    private _startTime: Date;
-    private _stopTime: Date;
+    private _startTime: Date = null;
+    private _stopTime: Date = null;
     private _currentTrigger: ITrigger;
 
     private _eventObservers: Rx.Observer<IThermostatEvent>[];
@@ -73,13 +73,13 @@ export class Thermostat implements IThermostat {
         }
 		
         if((this.isFirstRun() || Date.now() - this._stopTime.getTime() > this.configuration.minDelayBetweenRuns) && !this.isRunning()) {
-            this._targetOvershootBy = Math.min(Math.abs(this.target - temp), this.configuration.maxOvershootTemp)
+            this._targetOvershootBy = Math.min(Math.abs(this.target - temp), this.configuration.maxOvershootTemp);
             this.startTrigger();
         }
     }
 
     private tempReceived(temp: number) {
-        if(this.mode == ThermostatMode.Heating) {
+        if(this.mode === ThermostatMode.Heating) {
             if(temp < this.target - 1) {
                 this.tryStartTrigger(temp);
             }
@@ -117,11 +117,11 @@ export class Thermostat implements IThermostat {
     }
 
     isRunning(): boolean {
-        return this._startTime != null;
+        return this._startTime !== null;
     }
 
     setTarget(target: number) {
-        if(target != this._target) {
+        if(target !== this._target) {
             if(this.targetIsWithinBounds(target)) {
                 this._target = target;
             }
@@ -142,7 +142,7 @@ export class Thermostat implements IThermostat {
     setMode(mode: ThermostatMode) {
         this.mode = mode;
         this.setTarget(this.defaultTarget);
-        this._currentTrigger = mode == ThermostatMode.Heating ? this._furnaceTrigger : this._acTrigger;
+        this._currentTrigger = mode === ThermostatMode.Heating ? this._furnaceTrigger : this._acTrigger;
 		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Mode, mode.toString());
     }
 
@@ -151,19 +151,19 @@ export class Thermostat implements IThermostat {
     }
 
 	private get targetRange(): Array<number> {
-		return this.mode == ThermostatMode.Heating ? this.configuration.heatingTargetRange : this.configuration.coolingTargetRange;
+		return this.mode === ThermostatMode.Heating ? this.configuration.heatingTargetRange : this.configuration.coolingTargetRange;
 	}
 
 	private get defaultTarget(): number {
-        return this.mode == ThermostatMode.Heating ? this.configuration.heatingTargetRange[0] : this.configuration.coolingTargetRange[1];
+        return this.mode === ThermostatMode.Heating ? this.configuration.heatingTargetRange[0] : this.configuration.coolingTargetRange[1];
     }
 
     private isFirstRun() {
-        return this._stopTime == null;
+        return this._stopTime === null;
     }
 
     private emitTriggerEvent(start: boolean) {
-        let topic = this.mode == ThermostatMode.Heating ? 
+        let topic = this.mode === ThermostatMode.Heating ? 
 							ThermostatTopic.Furnace : ThermostatTopic.Ac;
         let value = start ? 'on' : 'off';
 

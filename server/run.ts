@@ -6,7 +6,7 @@ import { Thermostat } from './src/core/thermostat';
 
 import { ThermostatServer } from './src/api/thermostatServer';
 import { Scheduler } from './src/api/schedule';
-import { IBroadcaster, MqttBroadcaster } from './src/api/broadcaster';
+import { MqttBroadcaster } from './src/api/broadcaster';
 import { ThermostatBuilder } from './src/api/thermostatBuilder';
 
 
@@ -29,7 +29,7 @@ Configuration.Load(`${__dirname}/thermostat.config.json`, (config) => {
 
 	thermostat = new ThermostatBuilder(config.thermostat, config.pins).buildThermostat(config.server.type);
 
-	if(config.server.type.toLowerCase() == 'rest') {
+	if(config.server.type.toLowerCase() === 'rest') {
 		let broadcaster = new MqttBroadcaster(
 						config.broadcaster.brokerUrl,
 						config.broadcaster.username,
@@ -37,7 +37,7 @@ Configuration.Load(`${__dirname}/thermostat.config.json`, (config) => {
 		let scheduler = new Scheduler(config.schedule);
 		server = new ThermostatServer(io, thermostat, broadcaster, scheduler);
 	}
-	else if(config.server.type.toLowerCase() == 'sim') {
+	else if(config.server.type.toLowerCase() === 'sim') {
 		server = new ThermostatServer(io, thermostat, null, null);
 	}
 	else {

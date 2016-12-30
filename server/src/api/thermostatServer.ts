@@ -31,7 +31,7 @@ export class ThermostatServer {
 			}
 
 			//TODO this is a hack...
-			if(e.topic == ThermostatTopic.Temperature) {
+			if(e.topic === ThermostatTopic.Temperature) {
 				this.lastTemperature = parseFloat(e.message);
 			}
 		});
@@ -83,7 +83,7 @@ export class ThermostatServer {
 
 		socket.on('/mode', (data: any) => {
 			if(data) {
-				if(data.mode != null) {
+				if(data.mode !== null) {
 					this._thermostat.setMode(<ThermostatMode>(data.mode));
 				}
 				else {

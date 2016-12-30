@@ -25,13 +25,13 @@ export class ThermostatBuilder {
 		let furnaceTrigger: ITrigger;
 		let acTrigger: ITrigger;
 
-		if(type.toLowerCase() == 'rest') {
+		if(type.toLowerCase() === 'rest') {
 			tempSensor = new Dht11TempSensor(this._thermostatConfiguration.tempSensorPollDelay, this._pinConfiguration.tempSensor);
 			tempReader = new MovingAverageTempReader(tempSensor, 5);
 			furnaceTrigger = new PiGpioTrigger(this._pinConfiguration.furnaceTrigger);
 			acTrigger = new AcTrigger();
 		}
-		else if(type.toLowerCase() == 'sim') {
+		else if(type.toLowerCase() === 'sim') {
 			tempSensor = new SimTempSensor(this._thermostatConfiguration.tempSensorPollDelay, -.2, 70);
 			tempReader = new MovingAverageTempReader(tempSensor, 3);
 			furnaceTrigger = new SimTrigger(<SimTempSensor>tempSensor);

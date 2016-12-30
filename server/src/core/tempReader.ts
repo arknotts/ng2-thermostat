@@ -17,7 +17,7 @@ export class MovingAverageTempReader implements ITempReader {
                     .windowCount(this._windowSize, 1)
 					.map((x: Rx.Observable<number>) => {
 							return x.reduce((acc, num) => { return acc + num; })
-									.map((x: number) => { return x/(this._windowSize); })
+									.map((x: number) => { return x/(this._windowSize); });
 						}
 					)
 					.flatMap((v, i) => v);

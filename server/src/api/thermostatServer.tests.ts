@@ -1,6 +1,5 @@
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-var expect = chai.expect;
 import { Subject } from 'rxjs';
 
 import { ThermostatMode } from '../../../common/thermostatMode';
@@ -63,7 +62,7 @@ describe('Thermostat Server Spec', () => {
 				});
 			},
 			send: sinon.spy()
-		}
+		};
 
 		mockBroadcaster = {
 			connect: sinon.spy(),
@@ -135,28 +134,28 @@ describe('Thermostat Server Spec', () => {
 	});
 
 	it('should reset thermostat when reset command received', () => {
-		mockSocketEvents.find((event) => event.key == '/reset').callback();
+		mockSocketEvents.find((event) => event.key === '/reset').callback();
 		
 		sinon.assert.calledOnce(<any>mockThermostat.stop);
 		sinon.assert.calledOnce(<any>mockThermostat.start);
 	});
 
 	it('should start thermostat when start command received', () => {
-		mockSocketEvents.find((event) => event.key == '/start').callback();
+		mockSocketEvents.find((event) => event.key === '/start').callback();
 
 		sinon.assert.calledOnce(<any>mockThermostat.start);
 	});
 
 	it('should set thermostat target when target command received', () => {
 		let target = 74;
-		mockSocketEvents.find((event) => event.key == '/target').callback({target: target});
+		mockSocketEvents.find((event) => event.key === '/target').callback({target: target});
 
 		sinon.assert.calledWith(<any>mockThermostat.setTarget, target);
 	});
 
 	it('should set thermostat mode when mode command received', () => {
 		let mode = ThermostatMode.Cooling;
-		mockSocketEvents.find((event) => event.key == '/mode').callback({mode: mode});
+		mockSocketEvents.find((event) => event.key === '/mode').callback({mode: mode});
 
 		sinon.assert.calledWith(<any>mockThermostat.setMode, mode);
 	});

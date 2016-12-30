@@ -4,7 +4,6 @@ import * as sinon from 'sinon';
 var expect = chai.expect;
 
 import { ThermostatMode } from '../../../common/thermostatMode';
-import { ThermostatTopic } from '../../../common/thermostatEvent';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
@@ -54,14 +53,14 @@ describe('Thermostat Unit Tests:', () => {
 
 			thermostat.setTarget(70);
 
-			let trigger = mode == ThermostatMode.Heating ? furnaceTrigger : acTrigger;
+			let trigger = mode === ThermostatMode.Heating ? furnaceTrigger : acTrigger;
 			sinon.stub(trigger, 'start', () => {
 				observer.next(thermostat);
 				observer.complete();
 			});
 
 			sinon.stub(tempSensor, 'pollSensor', () => {
-				return thermostat.mode == ThermostatMode.Heating ? thermostat.target - 5 : thermostat.target + 5;
+				return thermostat.mode === ThermostatMode.Heating ? thermostat.target - 5 : thermostat.target + 5;
 			});
 
 			if(autoStart) {
@@ -163,7 +162,7 @@ describe('Thermostat Unit Tests:', () => {
 						expect(startCalled).to.be.true;
 						done();
 					}
-				)
+				);
 			});
 		});
 
@@ -184,7 +183,7 @@ describe('Thermostat Unit Tests:', () => {
 						expect(startCalled).to.be.false;
 						done();
 					}
-				)
+				);
 			});
 		});
 
@@ -273,7 +272,7 @@ describe('Thermostat Unit Tests:', () => {
 						expect(stopCalled).to.be.true;
 						done();
 					}
-				)
+				);
 			});
 		});
 	});
@@ -348,7 +347,7 @@ describe('Thermostat Unit Tests:', () => {
 							done("Stop never called");
 						}
 					}
-				)
+				);
 			});
 		});
 	});
@@ -500,10 +499,10 @@ describe('Thermostat Unit Tests:', () => {
 		describe('when furnace trigger is started, it', () => {
 			it('should emit an "on" message', (done) => {
 				thermostat.start().subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-						e.topic[0] == 'thermostat' &&
-						e.topic[1] == 'furnace' &&
-						e.message == 'on') {
+					if(e.topic.length === 2 &&
+						e.topic[0] === 'thermostat' &&
+						e.topic[1] === 'furnace' &&
+						e.message === 'on') {
 							done();
 					}
 				});
@@ -517,10 +516,10 @@ describe('Thermostat Unit Tests:', () => {
 				
 				buildRunningThermostat(ThermostatMode.Heating).subscribe((runningThermostat) => {
 					runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-						if(e.topic.length == 2 &&
-							e.topic[0] == 'thermostat' &&
-							e.topic[1] == 'furnace' &&
-							e.message == 'off') {
+						if(e.topic.length === 2 &&
+							e.topic[0] === 'thermostat' &&
+							e.topic[1] === 'furnace' &&
+							e.message === 'off') {
 								done();
 						}
 					}); 
@@ -534,10 +533,10 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit an "on" message', (done) => {
 				thermostat.setMode(ThermostatMode.Cooling);
 				thermostat.start().subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-							e.topic[0] == 'thermostat' &&
-							e.topic[1] == 'ac' &&
-							e.message == 'on') {
+					if(e.topic.length === 2 &&
+							e.topic[0] === 'thermostat' &&
+							e.topic[1] === 'ac' &&
+							e.message === 'on') {
 								done();
 						}
 				});
@@ -550,10 +549,10 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit an "off" message', (done) => {
 				buildRunningThermostat(ThermostatMode.Cooling).subscribe((runningThermostat) => {
 					runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-						if(e.topic.length == 2 &&
-							e.topic[0] == 'thermostat' &&
-							e.topic[1] == 'ac' &&
-							e.message == 'off') {
+						if(e.topic.length === 2 &&
+							e.topic[0] === 'thermostat' &&
+							e.topic[1] === 'ac' &&
+							e.message === 'off') {
 								done();
 						}
 					}); 
@@ -565,8 +564,6 @@ describe('Thermostat Unit Tests:', () => {
 		describe('when thermostat is running, it', () => {
 
 			it('should emit a temperature message at the appropriate interval', (done) => {
-				//clock = sinon.useFakeTimers();
-				
 				let tempEmitDelay = 50;
 				let iterations = 5;
 				
@@ -574,16 +571,15 @@ describe('Thermostat Unit Tests:', () => {
 					runningThermostat.configuration.tempEmitDelay = tempEmitDelay;
 					let lastNow: number = null;
 					let msgCount = 0;
-					let received: boolean = false;
 					let subscription: Rx.Subscription;
 					subscription = runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
 
-						if(e.topic.length == 3 &&
-							e.topic[0] == 'sensors' &&
-							e.topic[1] == 'temperature' &&
-							e.topic[2] == 'thermostat') {
+						if(e.topic.length === 3 &&
+							e.topic[0] === 'sensors' &&
+							e.topic[1] === 'temperature' &&
+							e.topic[2] === 'thermostat') {
 								let now: number = Date.now();
-								if(lastNow != null) {
+								if(lastNow) {
 									let diff = Math.abs(now - lastNow);
 									expect(diff).to.be.within(0, 5);
 								}
@@ -599,9 +595,6 @@ describe('Thermostat Unit Tests:', () => {
 					}); 
 
 					runningThermostat.start();
-
-					//clock.tick(tempEmitDelay*iterations);
-					//done();
 				}); 
 			});
 		});
@@ -614,9 +607,9 @@ describe('Thermostat Unit Tests:', () => {
 				let newTarget = thermostat.target + 2;
 
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-						e.topic[0] == 'thermostat' &&
-						e.topic[1] == 'target') {
+					if(e.topic.length === 2 &&
+						e.topic[0] === 'thermostat' &&
+						e.topic[1] === 'target') {
 							expect(e.message).to.equal(newTarget.toString());
 							done();
 					}
@@ -634,9 +627,9 @@ describe('Thermostat Unit Tests:', () => {
 				let newTarget = thermostat.target;
 
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-						e.topic[0] == 'thermostat' &&
-						e.topic[1] == 'target') {
+					if(e.topic.length === 2 &&
+						e.topic[0] === 'thermostat' &&
+						e.topic[1] === 'target') {
 							throw new Error('Received thermostat/target message when not expected');
 					}
 				}); 
