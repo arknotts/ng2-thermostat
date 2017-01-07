@@ -16,6 +16,8 @@ export interface IThermostat {
 	isRunning(): boolean;
     setTarget(target: number);
     setMode(mode: ThermostatMode);
+    startFan();
+    stopFan();
 }
 
 export class Thermostat implements IThermostat {
