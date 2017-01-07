@@ -95,6 +95,16 @@ export class ThermostatServer {
 			}
 		});
         
+		socket.on('/fan', (data: string) => {
+			if(data) {
+				if(data === 'start') {
+					this._thermostat.startFan();
+				}
+				else {
+					this._thermostat.stopFan();
+				}
+			}
+		});
     }
 
 	private emitEvent(socket: SocketIO.Socket, topic: string[], message: string) {
