@@ -5,7 +5,9 @@
 	},
 	"pins": {
 		"tempSensor": 4,
-		"furnaceTrigger": 15
+		"furnaceTrigger": 15,
+		"acTrigger": -1,
+		"fanTrigger": 16
 	},
 	"thermostat": {
 		"defaultMode": "Heating",

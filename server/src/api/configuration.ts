@@ -28,6 +28,8 @@ export interface IScheduleConfiguration {
 export interface IPinConfiguration {
 	tempSensor: number;
 	furnaceTrigger: number;
+	acTrigger: number;
+	fanTrigger: number;
 }
 
 export interface IConfiguration {

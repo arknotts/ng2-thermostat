@@ -3,14 +3,18 @@ import { SimTempSensor } from './simTempSensor';
 
 export class SimTrigger implements ITrigger {
 
-	constructor(private _simTempSensor: SimTempSensor) {
+	constructor(private _simTempSensor: SimTempSensor = null) {
 	}
 
 	start() {
-		this._simTempSensor.tempChangePerSecond = -this._simTempSensor.tempChangePerSecond;
+		if(this._simTempSensor) {
+			this._simTempSensor.tempChangePerSecond = -this._simTempSensor.tempChangePerSecond;
+		}
 	}
 
 	stop() {
-		this._simTempSensor.tempChangePerSecond = -this._simTempSensor.tempChangePerSecond;
+		if(this._simTempSensor) {
+			this._simTempSensor.tempChangePerSecond = -this._simTempSensor.tempChangePerSecond;
+		}
 	}
 }

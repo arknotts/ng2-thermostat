@@ -33,7 +33,8 @@ export class Thermostat implements IThermostat {
     constructor(public configuration: IThermostatConfiguration, 
                 private _tempReader: ITempReader, 
                 private _furnaceTrigger: ITrigger, 
-                private _acTrigger: ITrigger) {
+                private _acTrigger: ITrigger,
+                private _fanTrigger: ITrigger) {
 				
         this.setMode((<any>ThermostatMode)[configuration.defaultMode]);
 		this._eventObservers = [];
@@ -138,6 +139,14 @@ export class Thermostat implements IThermostat {
 
             this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Target, target.toString());
         }
+    }
+
+    startFan() {
+        this._fanTrigger.start();
+    }
+
+    stopFan() {
+        this._fanTrigger.stop();
     }
 
 	//TODO turn current trigger off before switching modes
