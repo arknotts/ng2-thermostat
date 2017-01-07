@@ -39,6 +39,8 @@ describe('Thermostat Server Spec', () => {
 			target: 70,
 			start: sinon.spy(),
 			stop: sinon.spy(),
+			startFan: sinon.spy(),
+			stopFan: sinon.spy(),
 			isRunning: sinon.spy(),
 			setTarget: sinon.spy(),
 			setMode: sinon.spy()
@@ -138,6 +140,18 @@ describe('Thermostat Server Spec', () => {
 		
 		sinon.assert.calledOnce(<any>mockThermostat.stop);
 		sinon.assert.calledOnce(<any>mockThermostat.start);
+	});
+
+	it('should start fan on thermostat when start fan command received', () => {
+		mockSocketEvents.find((event) => event.key === '/fan').callback('start');
+
+		sinon.assert.calledOnce(<any>mockThermostat.startFan);
+	});
+
+	it('should stop fan on thermostat when stop fan command received', () => {
+		mockSocketEvents.find((event) => event.key === '/fan').callback('stop');
+
+		sinon.assert.calledOnce(<any>mockThermostat.stopFan);
 	});
 
 	it('should start thermostat when start command received', () => {

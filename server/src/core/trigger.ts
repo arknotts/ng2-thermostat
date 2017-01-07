@@ -37,23 +37,3 @@ export class PiGpioTrigger implements ITrigger {
         this.writeToPin(val);
     }
 }
-
-export class FurnaceTrigger implements ITrigger {
-    start() {
-
-    }
-
-    stop() {
-        
-    }
-}
-
-export class AcTrigger implements ITrigger {
-    start() {
-
-    }
-
-    stop() {
-        
-    }
-}

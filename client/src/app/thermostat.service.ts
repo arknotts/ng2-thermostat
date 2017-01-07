@@ -55,4 +55,12 @@ export class ThermostatService {
 			mode: mode
 		});
 	}
+
+	startFan() {
+		this.socket.emit('/fan', 'start');
+	}
+
+	stopFan() {
+		this.socket.emit('/fan', 'stop');
+	}
 }

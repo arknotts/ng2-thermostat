@@ -9,7 +9,7 @@ import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
 import { Thermostat } from './thermostat';
 import { IThermostatConfiguration, ThermostatConfiguration } from './configuration';
-import { ITrigger, FurnaceTrigger, AcTrigger } from './trigger';
+import { ITrigger } from './trigger';
 import { IThermostatEvent } from '../../../common/thermostatEvent';
 
 describe('Thermostat Unit Tests:', () => {
@@ -22,6 +22,7 @@ describe('Thermostat Unit Tests:', () => {
     let tempRdr: ITempReader;
     let thermostat: Thermostat;
     let furnaceTrigger: ITrigger;
+    let fanTrigger;
     let acTrigger: ITrigger;
 
     let tickDelay = 2;
@@ -37,9 +38,19 @@ describe('Thermostat Unit Tests:', () => {
 
         tempSensor = new MockTempSensor(tickDelay);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
-        furnaceTrigger = new FurnaceTrigger();
-        acTrigger = new AcTrigger();
-        thermostat = new Thermostat(cfg, tempRdr, furnaceTrigger, acTrigger);
+        furnaceTrigger = <ITrigger> {
+			start: () => {},
+			stop: () => {}
+		};
+        acTrigger = <ITrigger> {
+			start: () => {},
+			stop: () => {}
+		};
+		fanTrigger = {
+			start: sinon.spy(),
+			stop: sinon.spy()
+		};
+        thermostat = new Thermostat(cfg, tempRdr, furnaceTrigger, acTrigger, fanTrigger);
 		if(mode) {
         	thermostat.setMode(mode);
 		}
@@ -348,6 +359,22 @@ describe('Thermostat Unit Tests:', () => {
 						}
 					}
 				);
+			});
+		});
+	});
+
+	describe('fan spec', () => {
+		describe('starting fan', () => {
+			it('should start fan trigger', () => {
+				thermostat.startFan();
+				sinon.assert.calledOnce(fanTrigger.start);
+			});
+		});
+
+		describe('stopping fan', () => {
+			it('should stop fan trigger', () => {
+				thermostat.stopFan();
+				sinon.assert.calledOnce(fanTrigger.stop);
 			});
 		});
 	});
