@@ -77,7 +77,13 @@ export class AppComponent implements OnInit {
 		}
 	}
 
+	startFan() {
+		this.thermostatService.startFan();
+	}
 
+	stopFan() {
+		this.thermostatService.stopFan();
+	}
 
 	targetUp() {
 		this.targetDelta$.next({
