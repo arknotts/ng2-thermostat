@@ -1,5 +1,8 @@
 var environment = process.env.NODE_ENV;
 var gpio: any = environment && environment.toUpperCase() === 'PRODUCTION' ? require('rpi-gpio') : null;
+var five: any = environment && environment.toUpperCase() === 'PRODUCTION' ? require('johnny-five') : null;
+
+import { SimTempSensor } from '../sim/simTempSensor';
 
 export interface ITrigger {
     start(): void;
@@ -35,5 +38,29 @@ export class PiGpioTrigger implements ITrigger {
     stop() {
         let val = this._invertRelay ? true : false;
         this.writeToPin(val);
+    }
+}
+
+export class JohnnyFiveRelayTrigger implements ITrigger {
+    private _board: any;
+    private _relay: any;
+
+    constructor(private _outPin: number) {
+        this._board = new five.Board();
+        this._board.on('ready', () => {
+            this._relay = new five.Relay(_outPin);
+        });
+    }
+
+    start() {
+        if(this._relay) {
+            this._relay.off();
+        }
+    }
+
+    stop() {
+        if(this._relay) {
+            this._relay.on();
+        }
     }
 }
