@@ -118,7 +118,7 @@ describe('Thermostat Server Spec', () => {
 			message: incomingTarget.toString()
 		});
 
-		sinon.assert.calledWith(<any>mockThermostat.setTarget, incomingTarget);
+		sinon.assert.calledWith(<any>mockThermostat.setTarget, incomingTarget, false);
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
 			topic: ThermostatTopic.Mode,
