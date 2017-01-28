@@ -642,22 +642,6 @@ describe('Thermostat Unit Tests:', () => {
 				
 				thermostat.setTarget(newTarget);
 			});
-
-			it('should not emit a "target changed" message if told not to', (done) => {
-				buildThermostat(ThermostatMode.Heating);
-				let newTarget = thermostat.target + 2;
-
-				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length === 2 &&
-						e.topic[0] === 'thermostat' &&
-						e.topic[1] === 'target') {
-							throw 'Emitted target message when it shouldn\'t have';
-					}
-				}); 
-				
-				thermostat.setTarget(newTarget, false);
-				done();
-			});
 		});
 
 		describe('when target is set to the current value, it', () => {

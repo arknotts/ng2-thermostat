@@ -47,7 +47,7 @@ export class ThermostatServer {
 
 		if(this._scheduler) {
 			this._scheduler.initSchedule((temperature) => {
-				this._thermostat.setTarget(temperature, true);
+				this._thermostat.setTarget(temperature);
 			});
 		}
 
@@ -73,7 +73,7 @@ export class ThermostatServer {
 		socket.on('/target', (data: any) => {
 			if(data) {
 				if(data.target) {
-					this._thermostat.setTarget(data.target, true);
+					this._thermostat.setTarget(data.target);
 				}
 				else {
 					this.emitError('Invalid set target call');
@@ -111,10 +111,10 @@ export class ThermostatServer {
     }
 
 	private handleInboundEvent(thermostatEvent: IThermostatEvent) {
-		if(thermostatEvent.topic == ThermostatTopic.Target) {
-			this._thermostat.setTarget(parseInt(thermostatEvent.message), false);
+		if(<any>thermostatEvent.topic == ThermostatTopic.Target.join('/')) {
+			this._thermostat.setTarget(parseInt(thermostatEvent.message));
 		}
-		else if(thermostatEvent.topic == ThermostatTopic.Mode) {
+		else if(<any>thermostatEvent.topic == ThermostatTopic.Mode.join('/')) {
 			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message))
 		}
 	}
