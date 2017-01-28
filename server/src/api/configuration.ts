@@ -7,7 +7,7 @@ export interface IServerConfiguration {
 	type: string;
 }
 
-export interface IBroadcasterConfiguration {
+export interface IIoTBridgeConfiguration {
 	type: string;
 	brokerUrl: string;
 	username: string;
@@ -36,7 +36,7 @@ export interface IConfiguration {
 	server: IServerConfiguration;
 	pins: IPinConfiguration;
 	thermostat: IThermostatConfiguration;
-	broadcaster: IBroadcasterConfiguration;
+	iotBridge: IIoTBridgeConfiguration;
 	schedule: IScheduleConfiguration;
 }
 

@@ -9,7 +9,7 @@ import { ThermostatTopic } from '../../../common/thermostatEvent';
 import { IThermostat } from '../core/thermostat';
 
 import { ThermostatServer } from './thermostatServer';
-import { IBroadcaster } from './broadcaster';
+import { IIoTBridge } from './iotBridge';
 import { IScheduler } from './schedule';
 
 interface IMockSocketEvent {
@@ -21,7 +21,7 @@ describe('Thermostat Server Spec', () => {
 	let server: ThermostatServer;
 	let mockThermostat: IThermostat;
 	let mockIo: any;
-	let mockBroadcaster: IBroadcaster;
+	let mockIoTBridge: IIoTBridge;
 	let mockScheduler: IScheduler;
 	let mockSocket: any;
 	let onConnectionCallback: {(socket)};
@@ -66,9 +66,10 @@ describe('Thermostat Server Spec', () => {
 			send: sinon.spy()
 		};
 
-		mockBroadcaster = {
+		mockIoTBridge = {
 			connect: sinon.spy(),
-			broadcast: sinon.spy()
+			broadcast: sinon.spy(),
+			events$: new Subject<IThermostatEvent>()
 		};
 
 		onScheduleCallback = sinon.spy();
@@ -78,7 +79,7 @@ describe('Thermostat Server Spec', () => {
 			}
 		};
 
-		server = new ThermostatServer(mockIo, mockThermostat, mockBroadcaster, mockScheduler);
+		server = new ThermostatServer(mockIo, mockThermostat, mockIoTBridge, mockScheduler);
 		server.start();
 
 		//reset call count on thermostat.start() since the server will have automatically started it
@@ -103,8 +104,29 @@ describe('Thermostat Server Spec', () => {
 		let event: any = {topic: []};
 		mockEventStream.next(event);
 
-		sinon.assert.calledOnce(<any>mockBroadcaster.broadcast);
-		sinon.assert.calledWith(<any>mockBroadcaster.broadcast, event);
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event);
+	});
+
+	it('should listen to the iot bridge and forward messages to thermostat', () => {
+		let incomingTarget = 74;
+		let incomingMode = ThermostatMode.Cooling;
+
+		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
+			topic: ThermostatTopic.Target,
+			type: ThermostatEventType.Message,
+			message: incomingTarget.toString()
+		});
+
+		sinon.assert.calledWith(<any>mockThermostat.setTarget, incomingTarget, false);
+
+		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
+			topic: ThermostatTopic.Mode,
+			type: ThermostatEventType.Message,
+			message: incomingMode.toString()
+		});
+
+		sinon.assert.calledWith(<any>mockThermostat.setMode, incomingMode.toString());
 	});
 
 	it('should emit latest thermostat values on new socket connection', () => {
