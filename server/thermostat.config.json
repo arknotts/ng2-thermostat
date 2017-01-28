@@ -19,7 +19,7 @@
 		"tempEmitDelay": 300000,
 		"tempSensorPollDelay": 5000
 	},
-	"broadcaster": {
+	"iotBridge": {
 		"type": "mqtt",
 		"brokerUrl": "",
 		"username": "",

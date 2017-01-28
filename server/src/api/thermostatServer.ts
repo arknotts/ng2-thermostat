@@ -3,7 +3,7 @@ import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { IThermostat } from '../core/thermostat';
 
-import { IBroadcaster } from './broadcaster';
+import { IIoTBridge } from './iotBridge';
 import { IScheduler } from './schedule';
 
 export class ThermostatServer {
@@ -12,7 +12,7 @@ export class ThermostatServer {
 
     constructor(protected _io: SocketIO.Server,
 				protected _thermostat: IThermostat,
-				protected _broadcaster: IBroadcaster = null,
+				protected _iotBridge: IIoTBridge = null,
 				protected _scheduler: IScheduler = null) {
 
 		this._io.on('connection', (socket) => {
@@ -26,8 +26,8 @@ export class ThermostatServer {
 			this._io.sockets.send(e);
 
 			//broadcast events over the network
-			if(this._broadcaster) {
-				this._broadcaster.broadcast(e);
+			if(this._iotBridge) {
+				this._iotBridge.broadcast(e);
 			}
 
 			//TODO this is a hack...
@@ -36,8 +36,11 @@ export class ThermostatServer {
 			}
 		});
 
-		if(this._broadcaster) {
-			this._broadcaster.connect();
+		if(this._iotBridge) {
+			this._iotBridge.connect();
+			this._iotBridge.events$.subscribe(
+				(thermostatEvent) => this.handleInboundEvent(thermostatEvent)
+			);
 		}
 
 		this._thermostat.start();
@@ -106,6 +109,15 @@ export class ThermostatServer {
 			}
 		});
     }
+
+	private handleInboundEvent(thermostatEvent: IThermostatEvent) {
+		if(thermostatEvent.topic == ThermostatTopic.Target) {
+			this._thermostat.setTarget(parseInt(thermostatEvent.message));
+		}
+		else if(thermostatEvent.topic == ThermostatTopic.Mode) {
+			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message))
+		}
+	}
 
 	private emitEvent(socket: SocketIO.Socket, topic: string[], message: string) {
 		socket.send(<IThermostatEvent>{
