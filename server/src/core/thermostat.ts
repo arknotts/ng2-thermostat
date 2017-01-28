@@ -14,7 +14,7 @@ export interface IThermostat {
 	start(): Rx.Observable<IThermostatEvent>;
 	stop();
 	isRunning(): boolean;
-    setTarget(target: number, emitEvent: boolean);
+    setTarget(target: number);
     setMode(mode: ThermostatMode);
     startFan();
     stopFan();
@@ -125,7 +125,7 @@ export class Thermostat implements IThermostat {
         return this._startTime !== null;
     }
 
-    setTarget(target: number, emitEvent: boolean = true) {
+    setTarget(target: number) {
         if(target !== this._target) {
             if(this.targetIsWithinBounds(target)) {
                 this._target = target;
@@ -139,9 +139,7 @@ export class Thermostat implements IThermostat {
                 }
             }
 
-            if(emitEvent) {
-                this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Target, target.toString());
-            }
+            this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Target, target.toString());
         }
     }
 
