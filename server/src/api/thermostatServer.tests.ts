@@ -100,12 +100,103 @@ describe('Thermostat Server Spec', () => {
 		sinon.assert.calledWith(mockIo.sockets.send, event);
 	});
 
-	it('should broadcast thermostat events', () => {
-		let event: any = {topic: []};
+	it('should broadcast thermostat temperature events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Temperature,
+			message: '72'
+		};
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			temperature: parseInt(event.message)
+		});
+	});
+	
+
+	it('should broadcast thermostat target events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Target,
+			message: '68'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			target: parseInt(event.message)
+		});
+	});
+	
+	it('should broadcast thermostat mode events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Mode,
+			message: ThermostatMode.Cooling.toString()
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			mode: event.message
+		});
+	});
+
+	it('should broadcast thermostat status events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Status,
+			message: 'some status message'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			status: event.message
+		});
+	});
+
+	it('should broadcast thermostat furnace events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Furnace,
+			message: 'on'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			action: event.message
+		});
+	});
+
+	it('should broadcast thermostat AC events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Ac,
+			message: 'on'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			action: event.message
+		});
+	});
+
+	it('should broadcast error events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: ThermostatTopic.Error,
+			message: 'some error'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+			error: event.message
+		});
 	});
 
 	it('should listen to the iot bridge and forward messages to thermostat', () => {

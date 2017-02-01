@@ -27,7 +27,8 @@ export class ThermostatServer {
 
 			//broadcast events over the network
 			if(this._iotBridge) {
-				this._iotBridge.broadcast(e);
+				let message: any = this.buildMessageFromEvent(e);
+				this._iotBridge.broadcast(e.topic.join('/'), message);
 			}
 
 			//TODO this is a hack...
@@ -53,6 +54,46 @@ export class ThermostatServer {
 
 		console.log('Server started!');
     }
+
+	private buildMessageFromEvent(event: IThermostatEvent): any {
+		if(event.topic == ThermostatTopic.Temperature) {
+			return {
+				temperature: parseInt(event.message)
+			};
+		}
+		else if(event.topic == ThermostatTopic.Target) {
+			return {
+				target: parseInt(event.message)
+			};
+		}
+		else if(event.topic == ThermostatTopic.Mode) {
+			return {
+				mode: event.message
+			};
+		}
+		else if(event.topic == ThermostatTopic.Status) {
+			return {
+				status: event.message
+			};
+		}
+		else if(event.topic == ThermostatTopic.Furnace) {
+			return {
+				action: event.message
+			};
+		}
+		else if(event.topic == ThermostatTopic.Ac) {
+			return {
+				action: event.message
+			};
+		}
+		else if(event.topic == ThermostatTopic.Error) {
+			return {
+				error: event.message
+			};
+		}
+
+		return null;
+	}
 
     private setupRoutes(socket: SocketIO.Socket) {
 
@@ -111,10 +152,10 @@ export class ThermostatServer {
     }
 
 	private handleInboundEvent(thermostatEvent: IThermostatEvent) {
-		if(<any>thermostatEvent.topic == ThermostatTopic.Target.join('/')) {
+		if(<any>thermostatEvent.topic == ThermostatTopic.Target) {
 			this._thermostat.setTarget(parseInt(thermostatEvent.message));
 		}
-		else if(<any>thermostatEvent.topic == ThermostatTopic.Mode.join('/')) {
+		else if(<any>thermostatEvent.topic == ThermostatTopic.Mode) {
 			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message))
 		}
 	}

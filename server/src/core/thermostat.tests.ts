@@ -530,6 +530,7 @@ describe('Thermostat Unit Tests:', () => {
 						e.topic[0] === 'thermostat' &&
 						e.topic[1] === 'furnace' &&
 						e.message === 'on') {
+							thermostat.stop();
 							done();
 					}
 				});
@@ -547,6 +548,7 @@ describe('Thermostat Unit Tests:', () => {
 							e.topic[0] === 'thermostat' &&
 							e.topic[1] === 'furnace' &&
 							e.message === 'off') {
+								runningThermostat.stop();
 								done();
 						}
 					}); 
@@ -564,6 +566,7 @@ describe('Thermostat Unit Tests:', () => {
 							e.topic[0] === 'thermostat' &&
 							e.topic[1] === 'ac' &&
 							e.message === 'on') {
+								thermostat.stop();
 								done();
 						}
 				});
@@ -580,6 +583,7 @@ describe('Thermostat Unit Tests:', () => {
 							e.topic[0] === 'thermostat' &&
 							e.topic[1] === 'ac' &&
 							e.message === 'off') {
+								runningThermostat.stop();
 								done();
 						}
 					}); 
