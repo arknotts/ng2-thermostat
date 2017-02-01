@@ -5,7 +5,7 @@ import { IThermostatEvent, ThermostatEventType } from '../../../common/thermosta
 
 export class IIoTBridge {
 	connect: () => void;
-	broadcast: (event: IThermostatEvent) => void;
+	broadcast: (topic: string, message: any) => void;
 	events$: Rx.Observable<IThermostatEvent>;
 }
 
@@ -27,17 +27,17 @@ export class MqttBridge implements IIoTBridge {
 
 		this.events$ = Rx.Observable.fromEvent(this._client, 'message', (topic, message) => <any>{topic, message})
 			.map((message) => <IThermostatEvent>{
-				topic: (<any>message).topic,
+				topic: (<any>message).topic.split('/'),
 				type: ThermostatEventType.Message,
 				message: (<any>message).message
 			}
 		);
 	}
 
-	broadcast(event: IThermostatEvent) {
+	broadcast(topic: string, message: any) {
 		//TODO shouldn't need this truthy check, ordering is wrong
 		if(this._client) {
-			this._client.publish(event.topic.join('/'), event.message);
+			this._client.publish(topic, JSON.stringify(message));
 		}
 	}
 }
