@@ -58,7 +58,7 @@ export class ThermostatServer {
 	private buildMessageFromEvent(event: IThermostatEvent): any {
 		if(event.topic == ThermostatTopic.Temperature) {
 			return {
-				temperature: parseInt(event.message)
+				temperature: parseFloat(event.message)
 			};
 		}
 		else if(event.topic == ThermostatTopic.Target) {
