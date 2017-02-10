@@ -43,13 +43,12 @@ export abstract class BaseTempSensor implements ITempSensor {
     }
 }
 
-export class Dht11TempSensor extends BaseTempSensor {
-
-    constructor(temperatureSensorPollDelay: number, private _gpioPin: number) {
+class DhtTempSensor extends BaseTempSensor {
+    constructor(temperatureSensorPollDelay: number, private _sensorType: number, private _gpioPin: number) {
         super(temperatureSensorPollDelay);
 
-        if(!dht.initialize(11, _gpioPin)) {
-            throw 'Error initializing DHT11 temperature sensor';
+        if(!dht.initialize(_sensorType, _gpioPin)) {
+            throw `Error initializing DHT${_sensorType} temperature sensor`;
         }
 
     }
@@ -60,6 +59,18 @@ export class Dht11TempSensor extends BaseTempSensor {
         let degreesFahrenheit = degreesCelsius*1.8 + 32;
         //let humidity = rawValue.humidity.toFixed(2); //TODO 
         return degreesFahrenheit;
+    }
+}
+
+export class Dht11TempSensor extends DhtTempSensor {
+    constructor(temperatureSensorPollDelay: number, gpioPin: number) {
+        super(temperatureSensorPollDelay, 11, gpioPin);
+    }
+}
+
+export class Dht22TempSensor extends DhtTempSensor {
+    constructor(temperatureSensorPollDelay: number, gpioPin: number) {
+        super(temperatureSensorPollDelay, 22, gpioPin);
     }
 }
 

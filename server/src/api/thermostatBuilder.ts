@@ -1,6 +1,6 @@
 import { Thermostat } from '../core/thermostat';
 import { IThermostatConfiguration } from '../core/configuration';
-import { ITempSensor, Dht11TempSensor } from '../core/tempSensor';
+import { ITempSensor, Dht22TempSensor } from '../core/tempSensor';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
 import { ITrigger, PiGpioTrigger } from '../core/trigger';
 
@@ -27,7 +27,7 @@ export class ThermostatBuilder {
 		let fanTrigger: ITrigger;
 
 		if(type.toLowerCase() === 'rest') {
-			tempSensor = new Dht11TempSensor(this._thermostatConfiguration.tempSensorPollDelay, this._pinConfiguration.tempSensor);
+			tempSensor = new Dht22TempSensor(this._thermostatConfiguration.tempSensorPollDelay, this._pinConfiguration.tempSensor);
 			tempReader = new MovingAverageTempReader(tempSensor, 5);
 			furnaceTrigger = new PiGpioTrigger(this._pinConfiguration.furnaceTrigger);
 			acTrigger = new PiGpioTrigger(this._pinConfiguration.acTrigger);
