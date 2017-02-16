@@ -1,7 +1,7 @@
 import Rx = require('rxjs');
 import * as mqtt from 'mqtt';
 
-import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
+import { IThermostatEvent, ThermostatEventType, THERMOSTAT_TOPIC } from '../../../common/thermostatEvent';
 
 export class IIoTBridge {
 	connect: () => void;
@@ -22,7 +22,9 @@ export class MqttBridge implements IIoTBridge {
 		});
 
 		this._client.on('connect', () => {
-			this._client.subscribe('thermostat/#');
+			THERMOSTAT_TOPIC.allTopics().forEach((topic) => {
+				this._client.subscribe(topic);
+			});
 		});
 
 		this.events$ = Rx.Observable.fromEvent(this._client, 'message', (topic, message) => <any>{topic, message})

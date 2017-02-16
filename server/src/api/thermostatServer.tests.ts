@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 
 import { ThermostatMode } from '../../../common/thermostatMode';
 import { IThermostatEvent, ThermostatEventType } from '../../../common/thermostatEvent';
-import { ThermostatTopic } from '../../../common/thermostatEvent';
+import { THERMOSTAT_TOPIC } from '../../../common/thermostatEvent';
 
 import { IThermostat } from '../core/thermostat';
 
@@ -103,7 +103,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast thermostat temperature events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Temperature,
+			topic: THERMOSTAT_TOPIC.Temperature,
 			message: '72'
 		};
 		mockEventStream.next(event);
@@ -118,7 +118,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast thermostat target events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Target,
+			topic: THERMOSTAT_TOPIC.Target,
 			message: '68'
 		};
 		mockEventStream.next(event);
@@ -132,7 +132,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast thermostat mode events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Mode,
+			topic: THERMOSTAT_TOPIC.Mode,
 			message: ThermostatMode.Cooling.toString()
 		};
 		mockEventStream.next(event);
@@ -146,7 +146,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast thermostat status events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Status,
+			topic: THERMOSTAT_TOPIC.Status,
 			message: 'some status message'
 		};
 		mockEventStream.next(event);
@@ -160,7 +160,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast thermostat furnace events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Furnace,
+			topic: THERMOSTAT_TOPIC.Furnace,
 			message: 'on'
 		};
 		mockEventStream.next(event);
@@ -174,7 +174,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast thermostat AC events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Ac,
+			topic: THERMOSTAT_TOPIC.Ac,
 			message: 'on'
 		};
 		mockEventStream.next(event);
@@ -188,7 +188,7 @@ describe('Thermostat Server Spec', () => {
 	it('should broadcast error events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Error,
+			topic: THERMOSTAT_TOPIC.Error,
 			message: 'some error'
 		};
 		mockEventStream.next(event);
@@ -204,7 +204,7 @@ describe('Thermostat Server Spec', () => {
 		let incomingMode = ThermostatMode.Cooling;
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
-			topic: ThermostatTopic.Target,
+			topic: THERMOSTAT_TOPIC.Target,
 			type: ThermostatEventType.Message,
 			message: incomingTarget.toString()
 		});
@@ -212,7 +212,7 @@ describe('Thermostat Server Spec', () => {
 		sinon.assert.calledWith(<any>mockThermostat.setTarget, incomingTarget);
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
-			topic: ThermostatTopic.Mode,
+			topic: THERMOSTAT_TOPIC.Mode,
 			type: ThermostatEventType.Message,
 			message: incomingMode.toString()
 		});
@@ -224,19 +224,19 @@ describe('Thermostat Server Spec', () => {
 		let temperature = 73;
 		mockEventStream.next({ //need to push a temperature through before we can get it back out
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Temperature,
+			topic: THERMOSTAT_TOPIC.Temperature,
 			message: temperature.toString(),
 		});
 		onConnectionCallback(mockSocket);
 
 		sinon.assert.calledWith(mockSocket.send, {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Target,
+			topic: THERMOSTAT_TOPIC.Target,
 			message: mockThermostat.target.toString(),
 		});
 		sinon.assert.calledWith(mockSocket.send, {
 			type: ThermostatEventType.Message,
-			topic: ThermostatTopic.Temperature,
+			topic: THERMOSTAT_TOPIC.Temperature,
 			message: temperature.toString(),
 		});
 	});
