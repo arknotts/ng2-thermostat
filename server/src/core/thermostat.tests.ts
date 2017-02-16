@@ -526,12 +526,9 @@ describe('Thermostat Unit Tests:', () => {
 		describe('when furnace trigger is started, it', () => {
 			it('should emit an "on" message', (done) => {
 				thermostat.start().subscribe((e: IThermostatEvent) => {
-					if(e.topic.length === 2 &&
-						e.topic[0] === 'thermostat' &&
-						e.topic[1] === 'furnace' &&
-						e.message === 'on') {
-							thermostat.stop();
-							done();
+					if(e.topic === 'thermostat/furnace' && e.message === 'on') {
+						thermostat.stop();
+						done();
 					}
 				});
 
@@ -544,12 +541,9 @@ describe('Thermostat Unit Tests:', () => {
 				
 				buildRunningThermostat(ThermostatMode.Heating).subscribe((runningThermostat) => {
 					runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-						if(e.topic.length === 2 &&
-							e.topic[0] === 'thermostat' &&
-							e.topic[1] === 'furnace' &&
-							e.message === 'off') {
-								runningThermostat.stop();
-								done();
+						if(e.topic === 'thermostat/furnace' && e.message === 'off') {
+							runningThermostat.stop();
+							done();
 						}
 					}); 
 					(<any>thermostat).stopTrigger();
@@ -562,13 +556,10 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit an "on" message', (done) => {
 				thermostat.setMode(ThermostatMode.Cooling);
 				thermostat.start().subscribe((e: IThermostatEvent) => {
-					if(e.topic.length === 2 &&
-							e.topic[0] === 'thermostat' &&
-							e.topic[1] === 'ac' &&
-							e.message === 'on') {
-								thermostat.stop();
-								done();
-						}
+					if(e.topic === 'thermostat/ac' && e.message === 'on') {
+						thermostat.stop();
+						done();
+					}
 				});
 
 				(<any>thermostat).startTrigger();
@@ -579,12 +570,9 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit an "off" message', (done) => {
 				buildRunningThermostat(ThermostatMode.Cooling).subscribe((runningThermostat) => {
 					runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-						if(e.topic.length === 2 &&
-							e.topic[0] === 'thermostat' &&
-							e.topic[1] === 'ac' &&
-							e.message === 'off') {
-								runningThermostat.stop();
-								done();
+						if(e.topic === 'thermostat/ac' && e.message === 'off') {
+							runningThermostat.stop();
+							done();
 						}
 					}); 
 					(<any>thermostat).stopTrigger();
@@ -603,23 +591,19 @@ describe('Thermostat Unit Tests:', () => {
 				let lastNow: number = null;
 				let msgCount = 0;
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
+					if(e.topic === 'sensors/temperature/thermostat') {
+						let now: number = Date.now();
+						if(lastNow) {
+							let diff = Math.abs(now - lastNow);
+							expect(diff).to.be.within(tempEmitDelay-10, tempEmitDelay+10);
+						}
 
-					if(e.topic.length === 3 &&
-						e.topic[0] === 'sensors' &&
-						e.topic[1] === 'temperature' &&
-						e.topic[2] === 'thermostat') {
-							let now: number = Date.now();
-							if(lastNow) {
-								let diff = Math.abs(now - lastNow);
-								expect(diff).to.be.within(tempEmitDelay-10, tempEmitDelay+10);
-							}
+						lastNow = now;
+						msgCount++;
 
-							lastNow = now;
-							msgCount++;
-
-							if(msgCount >= iterations) {
-								done();
-							}
+						if(msgCount >= iterations) {
+							done();
+						}
 					}
 				}); 
 
@@ -636,11 +620,9 @@ describe('Thermostat Unit Tests:', () => {
 				let newTarget = thermostat.target + 2;
 
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length === 2 &&
-						e.topic[0] === 'thermostat' &&
-						e.topic[1] === 'target') {
-							expect(e.message).to.equal(newTarget.toString());
-							done();
+					if(e.topic === 'thermostat/target') {
+						expect(e.message).to.equal(newTarget.toString());
+						done();
 					}
 				}); 
 				
@@ -656,10 +638,8 @@ describe('Thermostat Unit Tests:', () => {
 				let newTarget = thermostat.target;
 
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length === 2 &&
-						e.topic[0] === 'thermostat' &&
-						e.topic[1] === 'target') {
-							throw new Error('Received thermostat/target message when not expected');
+					if(e.topic === 'thermostat/target') {
+						throw new Error('Received thermostat/target message when not expected');
 					}
 				}); 
 				

@@ -109,7 +109,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			temperature: parseInt(event.message)
 		});
 	});
@@ -124,7 +124,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			target: parseInt(event.message)
 		});
 	});
@@ -138,7 +138,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			mode: event.message
 		});
 	});
@@ -152,7 +152,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			status: event.message
 		});
 	});
@@ -166,7 +166,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			action: event.message
 		});
 	});
@@ -180,7 +180,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			action: event.message
 		});
 	});
@@ -194,7 +194,7 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic.join('/'), {
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
 			error: event.message
 		});
 	});

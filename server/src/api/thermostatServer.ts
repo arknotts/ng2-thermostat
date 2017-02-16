@@ -28,7 +28,7 @@ export class ThermostatServer {
 			//broadcast events over the network
 			if(this._iotBridge) {
 				let message: any = this.buildMessageFromEvent(e);
-				this._iotBridge.broadcast(e.topic.join('/'), message);
+				this._iotBridge.broadcast(e.topic, message);
 			}
 
 			//TODO this is a hack...
@@ -160,7 +160,7 @@ export class ThermostatServer {
 		}
 	}
 
-	private emitEvent(socket: SocketIO.Socket, topic: string[], message: string) {
+	private emitEvent(socket: SocketIO.Socket, topic: string, message: string) {
 		socket.send(<IThermostatEvent>{
 			type: ThermostatEventType.Message,
 			topic: topic,

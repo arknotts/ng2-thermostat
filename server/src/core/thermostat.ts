@@ -183,7 +183,7 @@ export class Thermostat implements IThermostat {
         this.emitEvent(ThermostatEventType.Message, topic, value);
     }
 
-    private emitEvent(type: ThermostatEventType, topic: Array<string>, message: string) {
+    private emitEvent(type: ThermostatEventType, topic: string, message: string) {
         if(this._eventObservers) {
             this._eventObservers.forEach((observer) => {
 				observer.next({
