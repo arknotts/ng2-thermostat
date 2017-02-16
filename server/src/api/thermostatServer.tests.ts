@@ -204,17 +204,21 @@ describe('Thermostat Server Spec', () => {
 		let incomingMode = ThermostatMode.Cooling;
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
-			topic: THERMOSTAT_TOPIC.Target,
+			topic: THERMOSTAT_TOPIC.TargetSet,
 			type: ThermostatEventType.Message,
-			message: incomingTarget.toString()
+			message: {
+				target: incomingTarget.toString()
+			}
 		});
 
 		sinon.assert.calledWith(<any>mockThermostat.setTarget, incomingTarget);
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
-			topic: THERMOSTAT_TOPIC.Mode,
+			topic: THERMOSTAT_TOPIC.ModeSet,
 			type: ThermostatEventType.Message,
-			message: incomingMode.toString()
+			message: {
+				mode: incomingMode.toString()
+			}
 		});
 
 		sinon.assert.calledWith(<any>mockThermostat.setMode, incomingMode.toString());
