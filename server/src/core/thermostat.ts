@@ -1,6 +1,6 @@
 import Rx = require('rxjs');
 
-import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
+import { IThermostatEvent, ThermostatEventType, THERMOSTAT_TOPIC } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { ITempReader } from './tempReader';
@@ -42,7 +42,7 @@ export class Thermostat implements IThermostat {
 		this._eventObservers = [];
         this.eventStream = Rx.Observable.create((observer: Rx.Observer<IThermostatEvent>) => {
             this._eventObservers.push(observer);
-			this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Initialized');
+			this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Status, 'Initialized');
         }); 
     }
 
@@ -60,10 +60,10 @@ export class Thermostat implements IThermostat {
         );
 
         tempReaderObservable.throttleTime(this.configuration.tempEmitDelay).subscribe((temperature:number) => {
-            this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Temperature, temperature.toString());
+            this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Temperature, temperature.toString());
         });
 
-		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Started');
+		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Status, 'Started');
 
         return this.eventStream;
     }
@@ -71,7 +71,7 @@ export class Thermostat implements IThermostat {
     stop() {
         this._tempReader.stop();
 		this.emitComplete();
-		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Status, 'Stopped');
+		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Status, 'Stopped');
     }
 
     private tryStartTrigger(temp: number) {
@@ -139,7 +139,7 @@ export class Thermostat implements IThermostat {
                 }
             }
 
-            this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Target, target.toString());
+            this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Target, target.toString());
         }
     }
 
@@ -156,7 +156,7 @@ export class Thermostat implements IThermostat {
         this.mode = mode;
         this.setTarget(this.defaultTarget);
         this._currentTrigger = mode === ThermostatMode.Heating ? this._furnaceTrigger : this._acTrigger;
-		this.emitEvent(ThermostatEventType.Message, ThermostatTopic.Mode, mode.toString());
+		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Mode, mode.toString());
     }
 
     private targetIsWithinBounds(target: number) {
@@ -177,13 +177,13 @@ export class Thermostat implements IThermostat {
 
     private emitTriggerEvent(start: boolean) {
         let topic = this.mode === ThermostatMode.Heating ? 
-							ThermostatTopic.Furnace : ThermostatTopic.Ac;
+							THERMOSTAT_TOPIC.Furnace : THERMOSTAT_TOPIC.Ac;
         let value = start ? 'on' : 'off';
 
         this.emitEvent(ThermostatEventType.Message, topic, value);
     }
 
-    private emitEvent(type: ThermostatEventType, topic: Array<string>, message: string) {
+    private emitEvent(type: ThermostatEventType, topic: string, message: string) {
         if(this._eventObservers) {
             this._eventObservers.forEach((observer) => {
 				observer.next({

@@ -53,7 +53,7 @@ export class AppComponent implements OnInit {
 		if(!environment.production) {
 			//log all events to console for debugging
 			this.thermostatService.events$.subscribe((event) => {
-				console.log(`${event.topic.join('/')} : ${event.message}`);
+				console.log(`${event.topic} : ${event.message}`);
 			});
 		}
 
