@@ -152,10 +152,10 @@ export class ThermostatServer {
     }
 
 	private handleInboundEvent(thermostatEvent: IThermostatEvent) {
-		if(<any>thermostatEvent.topic == ThermostatTopic.Target) {
+		if(thermostatEvent.topic == ThermostatTopic.Target) {
 			this._thermostat.setTarget(parseInt(thermostatEvent.message));
 		}
-		else if(<any>thermostatEvent.topic == ThermostatTopic.Mode) {
+		else if(thermostatEvent.topic == ThermostatTopic.Mode) {
 			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message))
 		}
 	}

@@ -27,9 +27,9 @@ export class MqttBridge implements IIoTBridge {
 
 		this.events$ = Rx.Observable.fromEvent(this._client, 'message', (topic, message) => <any>{topic, message})
 			.map((message) => <IThermostatEvent>{
-				topic: (<any>message).topic.split('/'),
+				topic: message.topic,
 				type: ThermostatEventType.Message,
-				message: (<any>message).message
+				message: JSON.parse(message.message)
 			}
 		);
 	}
