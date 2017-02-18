@@ -1,6 +1,6 @@
 import Rx = require('rxjs');
 
-import { IThermostatEvent, ThermostatEventType, THERMOSTAT_TOPIC } from '../../../common/thermostatEvent';
+import { IThermostatEvent, ThermostatEventType, THERMOSTAT_TOPIC, ITempResult } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { ITempReader } from './tempReader';
@@ -54,13 +54,13 @@ export class Thermostat implements IThermostat {
         let tempReaderObservable = this._tempReader.start();
 		
         tempReaderObservable.subscribe(
-            (temperature:number) => this.tempReceived(temperature),
+            (temperatureResult) => this.tempReceived(temperatureResult.temperature),
             (error: string) => { console.error('Error reading temperature: %s', error); },
             () => { this.emitComplete(); }
         );
 
-        tempReaderObservable.throttleTime(this.configuration.tempEmitDelay).subscribe((temperature:number) => {
-            this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Temperature, temperature.toString());
+        tempReaderObservable.throttleTime(this.configuration.tempEmitDelay).subscribe((temperatureResult) => {
+            this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Temperature, temperatureResult);
         });
 
 		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Status, 'Started');
@@ -85,20 +85,20 @@ export class Thermostat implements IThermostat {
         }
     }
 
-    private tempReceived(temp: number) {
+    private tempReceived(temperature: number) {
         if(this.mode === ThermostatMode.Heating) {
-            if(temp < this.target - 1) {
-                this.tryStartTrigger(temp);
+            if(temperature < this.target - 1) {
+                this.tryStartTrigger(temperature);
             }
-            else if(temp >= this.target + this._targetOvershootBy) {
+            else if(temperature >= this.target + this._targetOvershootBy) {
                 this.stopTrigger();
             }
         }
         else { //cooling
-            if(temp > this.target + 1) {
-                this.tryStartTrigger(temp);
+            if(temperature > this.target + 1) {
+                this.tryStartTrigger(temperature);
             }
-            else if(temp <= this.target - this._targetOvershootBy) {
+            else if(temperature <= this.target - this._targetOvershootBy) {
                 this.stopTrigger();
             }
         }
@@ -183,7 +183,7 @@ export class Thermostat implements IThermostat {
         this.emitEvent(ThermostatEventType.Message, topic, value);
     }
 
-    private emitEvent(type: ThermostatEventType, topic: string, message: string) {
+    private emitEvent(type: ThermostatEventType, topic: string, message: Object) {
         if(this._eventObservers) {
             this._eventObservers.forEach((observer) => {
 				observer.next({

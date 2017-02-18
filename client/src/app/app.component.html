@@ -2,6 +2,7 @@
   <div class="col-md-4">
     <!--<h3>Thermostat</h3>-->
 	  <h2>{{thermostatService.temperature$ | async | number:'1.0-1'}}º</h2>
+	  <h2><i class="fa fa-tint"></i> {{thermostatService.humidity$ | async | number:'1.0-0'}}%</h2>
   </div>
 
   <div class="col-md-4">
