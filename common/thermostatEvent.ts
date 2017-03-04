@@ -27,3 +27,8 @@ export interface IThermostatEvent {
     topic: string;
     message: any;
 }
+
+export interface ITempResult {
+	temperature: number;
+	humidity?: number;
+}

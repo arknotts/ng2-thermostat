@@ -104,14 +104,14 @@ describe('Thermostat Server Spec', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
 			topic: THERMOSTAT_TOPIC.Temperature,
-			message: '72'
+			message: {
+				temperature: 72
+			}
 		};
 		mockEventStream.next(event);
 
 		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
-		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
-			temperature: parseInt(event.message)
-		});
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, event.message);
 	});
 	
 
@@ -229,7 +229,9 @@ describe('Thermostat Server Spec', () => {
 		mockEventStream.next({ //need to push a temperature through before we can get it back out
 			type: ThermostatEventType.Message,
 			topic: THERMOSTAT_TOPIC.Temperature,
-			message: temperature.toString(),
+			message: {
+				temperature: temperature,
+			}
 		});
 		onConnectionCallback(mockSocket);
 
@@ -241,7 +243,9 @@ describe('Thermostat Server Spec', () => {
 		sinon.assert.calledWith(mockSocket.send, {
 			type: ThermostatEventType.Message,
 			topic: THERMOSTAT_TOPIC.Temperature,
-			message: temperature.toString(),
+			message: {
+				temperature: temperature,
+			},
 		});
 	});
 

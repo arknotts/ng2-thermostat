@@ -13,6 +13,7 @@ export class ThermostatService {
 	events$: Observable<IThermostatEvent>;
 
 	temperature$: Observable<number>;
+	humidity$: Observable<number>;
 	target$: Observable<number>;
 	status$: Observable<string>;
 	error$: Observable<string>;
@@ -28,7 +29,10 @@ export class ThermostatService {
 		});
 
 		this.temperature$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Temperature))
-										.map((event: IThermostatEvent): number => parseFloat(event.message));
+										.map((event: IThermostatEvent): number => parseFloat(event.message.temperature));
+
+		this.humidity$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Temperature))
+										.map((event: IThermostatEvent): number => parseFloat(event.message.humidity));
 
 		this.target$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Target))
 										.map((event: IThermostatEvent): number => parseFloat(event.message));

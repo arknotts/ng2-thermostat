@@ -8,7 +8,7 @@ import { IScheduler } from './schedule';
 
 export class ThermostatServer {
 
-	private lastTemperature: number; //TODO read directly from stream, this is a hack
+	private lastTemperatureMessage: any; //TODO read directly from stream, this is a hack
 
     constructor(protected _io: SocketIO.Server,
 				protected _thermostat: IThermostat,
@@ -21,19 +21,19 @@ export class ThermostatServer {
 	}
 
     start() {
-		this._thermostat.eventStream.subscribe((e) => {
+		this._thermostat.eventStream.subscribe((event: IThermostatEvent) => {
 			//send thermostat events to all clients connected via sockets
-			this._io.sockets.send(e);
+			this._io.sockets.send(event);
 
 			//broadcast events over the network
 			if(this._iotBridge) {
-				let message: any = this.buildMessageFromEvent(e);
-				this._iotBridge.broadcast(e.topic, message);
+				let message: any = this.buildMessageFromEvent(event);
+				this._iotBridge.broadcast(event.topic, message);
 			}
 
 			//TODO this is a hack...
-			if(e.topic === THERMOSTAT_TOPIC.Temperature) {
-				this.lastTemperature = parseFloat(e.message);
+			if(event.topic === THERMOSTAT_TOPIC.Temperature) {
+				this.lastTemperatureMessage = event.message;
 			}
 		});
 
@@ -57,9 +57,7 @@ export class ThermostatServer {
 
 	private buildMessageFromEvent(event: IThermostatEvent): any {
 		if(event.topic == THERMOSTAT_TOPIC.Temperature) {
-			return {
-				temperature: parseFloat(event.message)
-			};
+			return event.message;
 		}
 		else if(event.topic == THERMOSTAT_TOPIC.Target) {
 			return {
@@ -99,8 +97,8 @@ export class ThermostatServer {
 
 		//emit "welcome" events to init client quickly
 		this.emitEvent(socket, THERMOSTAT_TOPIC.Target, this._thermostat.target.toString());
-		if(this.lastTemperature) {
-			this.emitEvent(socket, THERMOSTAT_TOPIC.Temperature, this.lastTemperature.toString());
+		if(this.lastTemperatureMessage) {
+			this.emitEvent(socket, THERMOSTAT_TOPIC.Temperature, this.lastTemperatureMessage);
 		}
 
 		socket.on('/reset', () => {
@@ -160,7 +158,7 @@ export class ThermostatServer {
 		}
 	}
 
-	private emitEvent(socket: SocketIO.Socket, topic: string, message: string) {
+	private emitEvent(socket: SocketIO.Socket, topic: string, message: any) {
 		socket.send(<IThermostatEvent>{
 			type: ThermostatEventType.Message,
 			topic: topic,

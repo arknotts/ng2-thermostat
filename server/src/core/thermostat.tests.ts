@@ -4,6 +4,7 @@ import * as sinon from 'sinon';
 var expect = chai.expect;
 
 import { ThermostatMode } from '../../../common/thermostatMode';
+import { ITempResult } from '../../../common/thermostatEvent';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
@@ -71,7 +72,7 @@ describe('Thermostat Unit Tests:', () => {
 			});
 
 			sinon.stub(tempSensor, 'pollSensor', () => {
-				return thermostat.mode === ThermostatMode.Heating ? thermostat.target - 5 : thermostat.target + 5;
+				return thermostat.mode === ThermostatMode.Heating ? {temperature: thermostat.target - 5} : {temperature: thermostat.target + 5};
 			});
 
 			if(autoStart) {
@@ -155,7 +156,7 @@ describe('Thermostat Unit Tests:', () => {
 	describe('furnace spec', () => {
 		describe('temperature dropping below target', () => {
 			it('should start furnace', (done) => {
-				let temperature$ = Rx.Observable.from([72,71,70,69,68]);
+				let temperature$ = Rx.Observable.from([72,71,70,69,68]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 
 				sinon.stub(tempRdr, "start", () => temperature$);
@@ -179,7 +180,7 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature staying above target', () => {
 			it('should not start furnace', (done) => {
-				let temperature$ = Rx.Observable.from([71,70,70,70,71,70,70,72,71]);
+				let temperature$ = Rx.Observable.from([71,70,70,70,71,70,70,72,71]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 
@@ -201,22 +202,22 @@ describe('Thermostat Unit Tests:', () => {
 		describe('starting furnace', () => {
 			it('should overshoot temperature', (done) => {
 				let target = 70;
-				let temperatures = [67,68,69,70,71,72,73,74,75,76,77];
-				let temperature$ = Rx.Observable.create((observer: Rx.Observer<number>) => {
-					while(temperatures.length > 0) {
-						observer.next(temperatures.shift());
+				let temperatureResults = [67,68,69,70,71,72,73,74,75,76,77].map(x => <ITempResult>{ temperature: x });
+				let temperature$ = Rx.Observable.create((observer: Rx.Observer<ITempResult>) => {
+					while(temperatureResults.length > 0) {
+						observer.next(temperatureResults.shift());
 					};
 
 					observer.complete();
 				});
-				let shouldOvershootBy = target - temperatures[0];
+				let shouldOvershootBy = target - temperatureResults[0].temperature;
 				let stopTemperature: number = 0;
 				cfg.maxOvershootTemp = 4;
 				thermostat.setTarget(target);
 
 				sinon.stub(tempRdr, "start", () => temperature$);
 				sinon.stub(furnaceTrigger, "stop", () => {
-					stopTemperature = temperatures[0] - 1;
+					stopTemperature = temperatureResults[0].temperature - 1;
 				});
 
 				thermostat.start();
@@ -234,10 +235,10 @@ describe('Thermostat Unit Tests:', () => {
 			it('should overshoot temperature by a maximum according to configuration', (done) => {
 				cfg.maxOvershootTemp = 2;
 				let target = 70;
-				let temperatures = [66,67,68,69,70,71,72,73,74,75,76,77];
-				let temperature$ = Rx.Observable.create((observer: Rx.Observer<number>) => {
-					while(temperatures.length > 0) {
-						observer.next(temperatures.shift());
+				let temperatureResults = [66,67,68,69,70,71,72,73,74,75,76,77].map(x => <ITempResult>{ temperature: x });
+				let temperature$ = Rx.Observable.create((observer: Rx.Observer<ITempResult>) => {
+					while(temperatureResults.length > 0) {
+						observer.next(temperatureResults.shift());
 					};
 
 					observer.complete();
@@ -247,7 +248,7 @@ describe('Thermostat Unit Tests:', () => {
 
 				sinon.stub(tempRdr, "start", () => temperature$);
 				sinon.stub(furnaceTrigger, "stop", () => {
-					stopTemperature = temperatures[0] - 1;
+					stopTemperature = temperatureResults[0].temperature - 1;
 				});
 
 				thermostat.start();
@@ -265,7 +266,7 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature rising above target + overshoot temp', () => {
 			it('should stop furnace', (done) => {
-				let temperature$ = Rx.Observable.from([67,68,69,70,71,72,73,74,75,76,77]);
+				let temperature$ = Rx.Observable.from([67,68,69,70,71,72,73,74,75,76,77]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
@@ -308,7 +309,7 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature staying at or below target', () => {
 			it('should not start air conditioner', (done) => {
-				let obs = Rx.Observable.from([71,70,69,70,71,70,70,72,73,72,71]);
+				let obs = Rx.Observable.from([71,70,69,70,71,70,70,72,73,72,71]).map(x => <ITempResult>{ temperature: x });
 				
 				thermostat.setTarget(73);
 				let startCalled: boolean = false;
@@ -330,7 +331,7 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature falling below target - overshoot temp', () => {
 			it('should stop air conditioner', (done) => {
-				let obs = Rx.Observable.from([77,76,75,74,73,72,71,70,69,68,67,66,65]);
+				let obs = Rx.Observable.from([77,76,75,74,73,72,71,70,69,68,67,66,65]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
@@ -389,7 +390,7 @@ describe('Thermostat Unit Tests:', () => {
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
 
-				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => 65));
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => <ITempResult>{ temperature: 65 }));
 				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
 				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);				
 
@@ -419,15 +420,15 @@ describe('Thermostat Unit Tests:', () => {
 					if(startCalled) {
 						if(stopCalled) {
 							//started, then stopped, need to try and start again
-							return 65;
+							return { temperature: 65 };
 						}
 						else {
 							//started but not stopped yet
-							return 75;
+							return { temperature: 75 };
 						}
 					}
 					
-					return 65;
+					return { temperature: 65 };
 				}));
 				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
 				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);
@@ -458,7 +459,7 @@ describe('Thermostat Unit Tests:', () => {
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
 
-				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => 75));
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => <ITempResult>{ temperature: 75 }));
 				sinon.stub(acTrigger, "start", () => startCalled = true);
 				sinon.stub(acTrigger, "stop", () => stopCalled = true);				
 
@@ -489,15 +490,15 @@ describe('Thermostat Unit Tests:', () => {
 					if(startCalled) {
 						if(stopCalled) {
 							//started, then stopped, need to try and start again
-							return 75;
+							return { temperature: 75 };
 						}
 						else {
 							//started but not stopped yet
-							return 65;
+							return { temperature: 65 };
 						}
 					}
 					
-					return 75;
+					return { temperature: 75 };
 				}));
 				sinon.stub(acTrigger, "start", () => startCalled = true);
 				sinon.stub(acTrigger, "stop", () => stopCalled = true);

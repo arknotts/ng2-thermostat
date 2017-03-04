@@ -2,10 +2,12 @@ var environment = process.env.NODE_ENV;
 var dht: any = environment && environment.toUpperCase() === 'PRODUCTION' ? require('node-dht-sensor') : null;
 import Rx = require('rxjs');
 
+import { ITempResult } from '../../../common/thermostatEvent';
+
 export interface ITempSensor {
-    start(): Rx.Observable<number>;
+    start(): Rx.Observable<ITempResult>;
     stop(): void;
-    pollSensor(): number;
+    pollSensor(): ITempResult;
 }
 
 export abstract class BaseTempSensor implements ITempSensor {
@@ -17,10 +19,10 @@ export abstract class BaseTempSensor implements ITempSensor {
 		this._temperatureSensorPollDelay = temperatureSensorPollDelay;
 	}
     
-    start(): Rx.Observable<number> {
+    start(): Rx.Observable<ITempResult> {
         this._start = true;
         
-        return Rx.Observable.create((observer: Rx.Observer<number>) => {
+        return Rx.Observable.create((observer: Rx.Observer<ITempResult>) => {
             this.pollAndEmitTemperature(observer);
         });
     }
@@ -29,9 +31,9 @@ export abstract class BaseTempSensor implements ITempSensor {
         this._start = false;
     }
 
-    abstract pollSensor(): number;
+    abstract pollSensor(): ITempResult;
 
-    private pollAndEmitTemperature(observer: Rx.Observer<number>): void {
+    private pollAndEmitTemperature(observer: Rx.Observer<ITempResult>): void {
         if(this._start) {
             observer.next(this.pollSensor());
             this._timeoutId = setTimeout(() => { this.pollAndEmitTemperature(observer); }, this._temperatureSensorPollDelay);
@@ -53,12 +55,16 @@ class DhtTempSensor extends BaseTempSensor {
 
     }
 
-    pollSensor(): number {
+    pollSensor(): ITempResult {
         let rawValue = dht.read();
         let degreesCelsius = parseFloat(rawValue.temperature);
         let degreesFahrenheit = degreesCelsius*1.8 + 32;
-        //let humidity = rawValue.humidity.toFixed(2); //TODO 
-        return degreesFahrenheit;
+        let humidity = rawValue.humidity.toFixed(2);
+        
+		return {
+			temperature: degreesFahrenheit,
+			humidity: humidity
+		};
     }
 }
 
@@ -79,7 +85,9 @@ export class MockTempSensor extends BaseTempSensor {
         super(temperatureSensorPollDelay);
     }
 
-    pollSensor(): number {
-        return 70;
+    pollSensor(): ITempResult {
+        return {
+			temperature: 70
+		};
     }
 }
