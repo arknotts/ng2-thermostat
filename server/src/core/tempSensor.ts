@@ -59,7 +59,7 @@ class DhtTempSensor extends BaseTempSensor {
         let rawValue = dht.read();
         let degreesCelsius = parseFloat(rawValue.temperature);
         let degreesFahrenheit = degreesCelsius*1.8 + 32;
-        let humidity = rawValue.humidity.toFixed(2);
+        let humidity = rawValue.humidity;
         
 		return {
 			temperature: degreesFahrenheit,
