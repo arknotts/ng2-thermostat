@@ -1,5 +1,3 @@
-import { ThermostatMode } from '../../../common/thermostatMode';
-
 export interface IThermostatConfiguration {
 	heatingTargetRange: Array<number>;
 	coolingTargetRange: Array<number>;

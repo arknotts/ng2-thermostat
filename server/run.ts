@@ -6,7 +6,7 @@ import { Thermostat } from './src/core/thermostat';
 
 import { ThermostatServer } from './src/api/thermostatServer';
 import { Scheduler } from './src/api/schedule';
-import { IBroadcaster, MqttBroadcaster } from './src/api/broadcaster';
+import { MqttBridge } from './src/api/iotBridge';
 import { ThermostatBuilder } from './src/api/thermostatBuilder';
 
 
@@ -29,15 +29,15 @@ Configuration.Load(`${__dirname}/thermostat.config.json`, (config) => {
 
 	thermostat = new ThermostatBuilder(config.thermostat, config.pins).buildThermostat(config.server.type);
 
-	if(config.server.type.toLowerCase() == 'rest') {
-		let broadcaster = new MqttBroadcaster(
-						config.broadcaster.brokerUrl,
-						config.broadcaster.username,
-						config.broadcaster.password);
+	if(config.server.type.toLowerCase() === 'rest') {
+		let iotBridge = new MqttBridge(
+						config.iotBridge.brokerUrl,
+						config.iotBridge.username,
+						config.iotBridge.password);
 		let scheduler = new Scheduler(config.schedule);
-		server = new ThermostatServer(io, thermostat, broadcaster, scheduler);
+		server = new ThermostatServer(io, thermostat, iotBridge, scheduler);
 	}
-	else if(config.server.type.toLowerCase() == 'sim') {
+	else if(config.server.type.toLowerCase() === 'sim') {
 		server = new ThermostatServer(io, thermostat, null, null);
 	}
 	else {

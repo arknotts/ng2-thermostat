@@ -4,18 +4,31 @@ export enum ThermostatEventType {
     Warning
 }
 
-export class ThermostatTopic {
-	static Temperature = ['sensors', 'temperature', 'thermostat'];
-	static Target = ['thermostat', 'target'];
-	static Mode = ['thermostat', 'mode'];
-	static Status = ['thermostat', 'status'];
-	static Furnace = ['thermostat', 'furnace'];
-	static Ac = ['thermostat', 'ac'];
-	static Error = ['thermostat', 'error'];
+class ThermostatTopic {
+	readonly Temperature = 'sensors/temperature/thermostat';
+	readonly Target = 'thermostat/target';
+	readonly TargetSet = 'thermostat/target/set';
+	readonly Mode = 'thermostat/mode';
+	readonly ModeSet = 'thermostat/mode/set';
+	readonly Status = 'thermostat/status';
+	readonly Furnace = 'thermostat/furnace';
+	readonly Ac = 'thermostat/ac';
+	readonly Error = 'thermostat/error';
+
+	allTopics(): string[] {
+		return Object.keys(this).map(key => this[key]);
+	}
 }
+
+export let THERMOSTAT_TOPIC: ThermostatTopic = new ThermostatTopic();
 
 export interface IThermostatEvent {
     type: ThermostatEventType;
-    topic: Array<string>;
-    message: string;
+    topic: string;
+    message: any;
+}
+
+export interface ITempResult {
+	temperature: number;
+	humidity?: number;
 }

@@ -1,18 +1,18 @@
-import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
+import { IThermostatEvent, ThermostatEventType, THERMOSTAT_TOPIC } from '../../../common/thermostatEvent';
 import { ThermostatMode } from '../../../common/thermostatMode';
 
 import { IThermostat } from '../core/thermostat';
 
-import { IBroadcaster } from './broadcaster';
+import { IIoTBridge } from './iotBridge';
 import { IScheduler } from './schedule';
 
 export class ThermostatServer {
 
-	private lastTemperature: number; //TODO read directly from stream, this is a hack
+	private lastTemperatureMessage: any; //TODO read directly from stream, this is a hack
 
     constructor(protected _io: SocketIO.Server,
 				protected _thermostat: IThermostat,
-				protected _broadcaster: IBroadcaster = null,
+				protected _iotBridge: IIoTBridge = null,
 				protected _scheduler: IScheduler = null) {
 
 		this._io.on('connection', (socket) => {
@@ -21,23 +21,27 @@ export class ThermostatServer {
 	}
 
     start() {
-		this._thermostat.eventStream.subscribe((e) => {
+		this._thermostat.eventStream.subscribe((event: IThermostatEvent) => {
 			//send thermostat events to all clients connected via sockets
-			this._io.sockets.send(e);
+			this._io.sockets.send(event);
 
 			//broadcast events over the network
-			if(this._broadcaster) {
-				this._broadcaster.broadcast(e);
+			if(this._iotBridge) {
+				let message: any = this.buildMessageFromEvent(event);
+				this._iotBridge.broadcast(event.topic, message);
 			}
 
 			//TODO this is a hack...
-			if(e.topic == ThermostatTopic.Temperature) {
-				this.lastTemperature = parseFloat(e.message);
+			if(event.topic === THERMOSTAT_TOPIC.Temperature) {
+				this.lastTemperatureMessage = event.message;
 			}
 		});
 
-		if(this._broadcaster) {
-			this._broadcaster.connect();
+		if(this._iotBridge) {
+			this._iotBridge.connect();
+			this._iotBridge.events$.subscribe(
+				(thermostatEvent) => this.handleInboundEvent(thermostatEvent)
+			);
 		}
 
 		this._thermostat.start();
@@ -51,12 +55,50 @@ export class ThermostatServer {
 		console.log('Server started!');
     }
 
+	private buildMessageFromEvent(event: IThermostatEvent): any {
+		if(event.topic == THERMOSTAT_TOPIC.Temperature) {
+			return event.message;
+		}
+		else if(event.topic == THERMOSTAT_TOPIC.Target) {
+			return {
+				target: parseInt(event.message)
+			};
+		}
+		else if(event.topic == THERMOSTAT_TOPIC.Mode) {
+			return {
+				mode: event.message
+			};
+		}
+		else if(event.topic == THERMOSTAT_TOPIC.Status) {
+			return {
+				status: event.message
+			};
+		}
+		else if(event.topic == THERMOSTAT_TOPIC.Furnace) {
+			return {
+				action: event.message
+			};
+		}
+		else if(event.topic == THERMOSTAT_TOPIC.Ac) {
+			return {
+				action: event.message
+			};
+		}
+		else if(event.topic == THERMOSTAT_TOPIC.Error) {
+			return {
+				error: event.message
+			};
+		}
+
+		return null;
+	}
+
     private setupRoutes(socket: SocketIO.Socket) {
 
 		//emit "welcome" events to init client quickly
-		this.emitEvent(socket, ThermostatTopic.Target, this._thermostat.target.toString());
-		if(this.lastTemperature) {
-			this.emitEvent(socket, ThermostatTopic.Temperature, this.lastTemperature.toString());
+		this.emitEvent(socket, THERMOSTAT_TOPIC.Target, this._thermostat.target.toString());
+		if(this.lastTemperatureMessage) {
+			this.emitEvent(socket, THERMOSTAT_TOPIC.Temperature, this.lastTemperatureMessage);
 		}
 
 		socket.on('/reset', () => {
@@ -83,7 +125,7 @@ export class ThermostatServer {
 
 		socket.on('/mode', (data: any) => {
 			if(data) {
-				if(data.mode != null) {
+				if(data.mode !== null) {
 					this._thermostat.setMode(<ThermostatMode>(data.mode));
 				}
 				else {
@@ -95,9 +137,28 @@ export class ThermostatServer {
 			}
 		});
         
+		socket.on('/fan', (data: string) => {
+			if(data) {
+				if(data === 'start') {
+					this._thermostat.startFan();
+				}
+				else {
+					this._thermostat.stopFan();
+				}
+			}
+		});
     }
 
-	private emitEvent(socket: SocketIO.Socket, topic: string[], message: string) {
+	private handleInboundEvent(thermostatEvent: IThermostatEvent) {
+		if(thermostatEvent.topic == THERMOSTAT_TOPIC.TargetSet) {
+			this._thermostat.setTarget(parseInt(thermostatEvent.message.target));
+		}
+		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.ModeSet) {
+			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message.mode));
+		}
+	}
+
+	private emitEvent(socket: SocketIO.Socket, topic: string, message: any) {
 		socket.send(<IThermostatEvent>{
 			type: ThermostatEventType.Message,
 			topic: topic,
@@ -108,7 +169,7 @@ export class ThermostatServer {
 	private emitError(error: string) {
 		this._io.sockets.send(<IThermostatEvent>{
 			type: ThermostatEventType.Error,
-			topic: ThermostatTopic.Error,
+			topic: THERMOSTAT_TOPIC.Error,
 			message: error,
 		});
 	}

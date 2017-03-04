@@ -4,12 +4,13 @@ import * as sinon from 'sinon';
 var expect = chai.expect;
 
 import { ThermostatMode } from '../../../common/thermostatMode';
+import { ITempResult } from '../../../common/thermostatEvent';
 
 import { ITempReader, MovingAverageTempReader } from './tempReader';
 import { ITempSensor, MockTempSensor } from './tempSensor';
 import { Thermostat } from './thermostat';
 import { IThermostatConfiguration, ThermostatConfiguration } from './configuration';
-import { ITrigger, FurnaceTrigger, AcTrigger } from './trigger';
+import { ITrigger } from './trigger';
 import { IThermostatEvent } from '../../../common/thermostatEvent';
 
 describe('Thermostat Unit Tests:', () => {
@@ -22,6 +23,7 @@ describe('Thermostat Unit Tests:', () => {
     let tempRdr: ITempReader;
     let thermostat: Thermostat;
     let furnaceTrigger: ITrigger;
+    let fanTrigger;
     let acTrigger: ITrigger;
 
     let tickDelay = 2;
@@ -37,9 +39,19 @@ describe('Thermostat Unit Tests:', () => {
 
         tempSensor = new MockTempSensor(tickDelay);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
-        furnaceTrigger = new FurnaceTrigger();
-        acTrigger = new AcTrigger();
-        thermostat = new Thermostat(cfg, tempRdr, furnaceTrigger, acTrigger);
+        furnaceTrigger = <ITrigger> {
+			start: () => {},
+			stop: () => {}
+		};
+        acTrigger = <ITrigger> {
+			start: () => {},
+			stop: () => {}
+		};
+		fanTrigger = {
+			start: sinon.spy(),
+			stop: sinon.spy()
+		};
+        thermostat = new Thermostat(cfg, tempRdr, furnaceTrigger, acTrigger, fanTrigger);
 		if(mode) {
         	thermostat.setMode(mode);
 		}
@@ -53,14 +65,14 @@ describe('Thermostat Unit Tests:', () => {
 
 			thermostat.setTarget(70);
 
-			let trigger = mode == ThermostatMode.Heating ? furnaceTrigger : acTrigger;
+			let trigger = mode === ThermostatMode.Heating ? furnaceTrigger : acTrigger;
 			sinon.stub(trigger, 'start', () => {
 				observer.next(thermostat);
 				observer.complete();
 			});
 
 			sinon.stub(tempSensor, 'pollSensor', () => {
-				return thermostat.mode == ThermostatMode.Heating ? thermostat.target - 5 : thermostat.target + 5;
+				return thermostat.mode === ThermostatMode.Heating ? {temperature: thermostat.target - 5} : {temperature: thermostat.target + 5};
 			});
 
 			if(autoStart) {
@@ -144,7 +156,7 @@ describe('Thermostat Unit Tests:', () => {
 	describe('furnace spec', () => {
 		describe('temperature dropping below target', () => {
 			it('should start furnace', (done) => {
-				let temperature$ = Rx.Observable.from([72,71,70,69,68]);
+				let temperature$ = Rx.Observable.from([72,71,70,69,68]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 
 				sinon.stub(tempRdr, "start", () => temperature$);
@@ -162,13 +174,13 @@ describe('Thermostat Unit Tests:', () => {
 						expect(startCalled).to.be.true;
 						done();
 					}
-				)
+				);
 			});
 		});
 
 		describe('temperature staying above target', () => {
 			it('should not start furnace', (done) => {
-				let temperature$ = Rx.Observable.from([71,70,70,70,71,70,70,72,71]);
+				let temperature$ = Rx.Observable.from([71,70,70,70,71,70,70,72,71]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 
@@ -183,19 +195,78 @@ describe('Thermostat Unit Tests:', () => {
 						expect(startCalled).to.be.false;
 						done();
 					}
-				)
+				);
 			});
 		});
 
-		describe.skip('starting furnace', () => {
+		describe('starting furnace', () => {
 			it('should overshoot temperature', (done) => {
+				let target = 70;
+				let temperatureResults = [67,68,69,70,71,72,73,74,75,76,77].map(x => <ITempResult>{ temperature: x });
+				let temperature$ = Rx.Observable.create((observer: Rx.Observer<ITempResult>) => {
+					while(temperatureResults.length > 0) {
+						observer.next(temperatureResults.shift());
+					};
 
+					observer.complete();
+				});
+				let shouldOvershootBy = target - temperatureResults[0].temperature;
+				let stopTemperature: number = 0;
+				cfg.maxOvershootTemp = 4;
+				thermostat.setTarget(target);
+
+				sinon.stub(tempRdr, "start", () => temperature$);
+				sinon.stub(furnaceTrigger, "stop", () => {
+					stopTemperature = temperatureResults[0].temperature - 1;
+				});
+
+				thermostat.start();
+
+				temperature$.subscribe(
+					null,
+					null,
+					() => {
+						expect(stopTemperature).to.equal(target + shouldOvershootBy);
+						done();
+					}
+				);
+			});
+
+			it('should overshoot temperature by a maximum according to configuration', (done) => {
+				cfg.maxOvershootTemp = 2;
+				let target = 70;
+				let temperatureResults = [66,67,68,69,70,71,72,73,74,75,76,77].map(x => <ITempResult>{ temperature: x });
+				let temperature$ = Rx.Observable.create((observer: Rx.Observer<ITempResult>) => {
+					while(temperatureResults.length > 0) {
+						observer.next(temperatureResults.shift());
+					};
+
+					observer.complete();
+				});
+				let stopTemperature: number = 0;
+				thermostat.setTarget(target);
+
+				sinon.stub(tempRdr, "start", () => temperature$);
+				sinon.stub(furnaceTrigger, "stop", () => {
+					stopTemperature = temperatureResults[0].temperature - 1;
+				});
+
+				thermostat.start();
+
+				temperature$.subscribe(
+					null,
+					null,
+					() => {
+						expect(stopTemperature).to.equal(target + cfg.maxOvershootTemp);
+						done();
+					}
+				);
 			});
 		});
 
 		describe('temperature rising above target + overshoot temp', () => {
 			it('should stop furnace', (done) => {
-				let temperature$ = Rx.Observable.from([67,68,69,70,71,72,73,74,75,76,77]);
+				let temperature$ = Rx.Observable.from([67,68,69,70,71,72,73,74,75,76,77]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
@@ -213,7 +284,7 @@ describe('Thermostat Unit Tests:', () => {
 						expect(stopCalled).to.be.true;
 						done();
 					}
-				)
+				);
 			});
 		});
 	});
@@ -238,7 +309,7 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature staying at or below target', () => {
 			it('should not start air conditioner', (done) => {
-				let obs = Rx.Observable.from([71,70,69,70,71,70,70,72,73,72,71]);
+				let obs = Rx.Observable.from([71,70,69,70,71,70,70,72,73,72,71]).map(x => <ITempResult>{ temperature: x });
 				
 				thermostat.setTarget(73);
 				let startCalled: boolean = false;
@@ -260,7 +331,7 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature falling below target - overshoot temp', () => {
 			it('should stop air conditioner', (done) => {
-				let obs = Rx.Observable.from([77,76,75,74,73,72,71,70,69,68,67,66,65]);
+				let obs = Rx.Observable.from([77,76,75,74,73,72,71,70,69,68,67,66,65]).map(x => <ITempResult>{ temperature: x });
 				thermostat.setTarget(70);
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
@@ -288,7 +359,23 @@ describe('Thermostat Unit Tests:', () => {
 							done("Stop never called");
 						}
 					}
-				)
+				);
+			});
+		});
+	});
+
+	describe('fan spec', () => {
+		describe('starting fan', () => {
+			it('should start fan trigger', () => {
+				thermostat.startFan();
+				sinon.assert.calledOnce(fanTrigger.start);
+			});
+		});
+
+		describe('stopping fan', () => {
+			it('should stop fan trigger', () => {
+				thermostat.stopFan();
+				sinon.assert.calledOnce(fanTrigger.stop);
 			});
 		});
 	});
@@ -303,7 +390,7 @@ describe('Thermostat Unit Tests:', () => {
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
 
-				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => 65));
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => <ITempResult>{ temperature: 65 }));
 				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
 				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);				
 
@@ -333,15 +420,15 @@ describe('Thermostat Unit Tests:', () => {
 					if(startCalled) {
 						if(stopCalled) {
 							//started, then stopped, need to try and start again
-							return 65;
+							return { temperature: 65 };
 						}
 						else {
 							//started but not stopped yet
-							return 75;
+							return { temperature: 75 };
 						}
 					}
 					
-					return 65;
+					return { temperature: 65 };
 				}));
 				sinon.stub(furnaceTrigger, "start", () => startCalled = true);
 				sinon.stub(furnaceTrigger, "stop", () => stopCalled = true);
@@ -372,7 +459,7 @@ describe('Thermostat Unit Tests:', () => {
 				let startCalled: boolean = false;
 				let stopCalled: boolean = false;
 
-				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => 75));
+				sinon.stub(tempRdr, "start", () => Rx.Observable.interval(1).map(() => <ITempResult>{ temperature: 75 }));
 				sinon.stub(acTrigger, "start", () => startCalled = true);
 				sinon.stub(acTrigger, "stop", () => stopCalled = true);				
 
@@ -403,15 +490,15 @@ describe('Thermostat Unit Tests:', () => {
 					if(startCalled) {
 						if(stopCalled) {
 							//started, then stopped, need to try and start again
-							return 75;
+							return { temperature: 75 };
 						}
 						else {
 							//started but not stopped yet
-							return 65;
+							return { temperature: 65 };
 						}
 					}
 					
-					return 75;
+					return { temperature: 75 };
 				}));
 				sinon.stub(acTrigger, "start", () => startCalled = true);
 				sinon.stub(acTrigger, "stop", () => stopCalled = true);
@@ -440,11 +527,9 @@ describe('Thermostat Unit Tests:', () => {
 		describe('when furnace trigger is started, it', () => {
 			it('should emit an "on" message', (done) => {
 				thermostat.start().subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-						e.topic[0] == 'thermostat' &&
-						e.topic[1] == 'furnace' &&
-						e.message == 'on') {
-							done();
+					if(e.topic === 'thermostat/furnace' && e.message === 'on') {
+						thermostat.stop();
+						done();
 					}
 				});
 
@@ -457,11 +542,9 @@ describe('Thermostat Unit Tests:', () => {
 				
 				buildRunningThermostat(ThermostatMode.Heating).subscribe((runningThermostat) => {
 					runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-						if(e.topic.length == 2 &&
-							e.topic[0] == 'thermostat' &&
-							e.topic[1] == 'furnace' &&
-							e.message == 'off') {
-								done();
+						if(e.topic === 'thermostat/furnace' && e.message === 'off') {
+							runningThermostat.stop();
+							done();
 						}
 					}); 
 					(<any>thermostat).stopTrigger();
@@ -474,12 +557,10 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit an "on" message', (done) => {
 				thermostat.setMode(ThermostatMode.Cooling);
 				thermostat.start().subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-							e.topic[0] == 'thermostat' &&
-							e.topic[1] == 'ac' &&
-							e.message == 'on') {
-								done();
-						}
+					if(e.topic === 'thermostat/ac' && e.message === 'on') {
+						thermostat.stop();
+						done();
+					}
 				});
 
 				(<any>thermostat).startTrigger();
@@ -490,11 +571,9 @@ describe('Thermostat Unit Tests:', () => {
 			it('should emit an "off" message', (done) => {
 				buildRunningThermostat(ThermostatMode.Cooling).subscribe((runningThermostat) => {
 					runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-						if(e.topic.length == 2 &&
-							e.topic[0] == 'thermostat' &&
-							e.topic[1] == 'ac' &&
-							e.message == 'off') {
-								done();
+						if(e.topic === 'thermostat/ac' && e.message === 'off') {
+							runningThermostat.stop();
+							done();
 						}
 					}); 
 					(<any>thermostat).stopTrigger();
@@ -505,44 +584,32 @@ describe('Thermostat Unit Tests:', () => {
 		describe('when thermostat is running, it', () => {
 
 			it('should emit a temperature message at the appropriate interval', (done) => {
-				//clock = sinon.useFakeTimers();
-				
 				let tempEmitDelay = 50;
 				let iterations = 5;
+				cfg.tempEmitDelay = tempEmitDelay;
+				clock = sinon.useFakeTimers();
 				
-				buildRunningThermostat(ThermostatMode.Heating, true).subscribe((runningThermostat) => {
-					runningThermostat.configuration.tempEmitDelay = tempEmitDelay;
-					let lastNow: number = null;
-					let msgCount = 0;
-					let received: boolean = false;
-					let subscription: Rx.Subscription;
-					subscription = runningThermostat.eventStream.subscribe((e: IThermostatEvent) => {
-
-						if(e.topic.length == 3 &&
-							e.topic[0] == 'sensors' &&
-							e.topic[1] == 'temperature' &&
-							e.topic[2] == 'thermostat') {
-								let now: number = Date.now();
-								if(lastNow != null) {
-									let diff = Math.abs(now - lastNow);
-									expect(diff).to.be.within(0, 5);
-								}
-
-								lastNow = now;
-								msgCount++;
-
-								if(msgCount >= iterations) {
-									done();
-									subscription.unsubscribe();
-								}
+				let lastNow: number = null;
+				let msgCount = 0;
+				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
+					if(e.topic === 'sensors/temperature/thermostat') {
+						let now: number = Date.now();
+						if(lastNow) {
+							let diff = Math.abs(now - lastNow);
+							expect(diff).to.be.within(tempEmitDelay-10, tempEmitDelay+10);
 						}
-					}); 
 
-					runningThermostat.start();
+						lastNow = now;
+						msgCount++;
 
-					//clock.tick(tempEmitDelay*iterations);
-					//done();
+						if(msgCount >= iterations) {
+							done();
+						}
+					}
 				}); 
+
+				thermostat.start();
+				clock.tick(tempEmitDelay*iterations);
 			});
 		});
 
@@ -554,11 +621,9 @@ describe('Thermostat Unit Tests:', () => {
 				let newTarget = thermostat.target + 2;
 
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-						e.topic[0] == 'thermostat' &&
-						e.topic[1] == 'target') {
-							expect(e.message).to.equal(newTarget.toString());
-							done();
+					if(e.topic === 'thermostat/target') {
+						expect(e.message).to.equal(newTarget.toString());
+						done();
 					}
 				}); 
 				
@@ -574,10 +639,8 @@ describe('Thermostat Unit Tests:', () => {
 				let newTarget = thermostat.target;
 
 				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
-					if(e.topic.length == 2 &&
-						e.topic[0] == 'thermostat' &&
-						e.topic[1] == 'target') {
-							throw new Error('Received thermostat/target message when not expected');
+					if(e.topic === 'thermostat/target') {
+						throw new Error('Received thermostat/target message when not expected');
 					}
 				}); 
 				

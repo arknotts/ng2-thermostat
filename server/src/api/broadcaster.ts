@@ -22,7 +22,7 @@ export class MqttBroadcaster implements IBroadcaster {
 	broadcast(event: IThermostatEvent) {
 		//TODO shouldn't need this truthy check, ordering is wrong
 		if(this._client) {
-			this._client.publish('/' + event.topic.join('/'), event.message);
+			this._client.publish(event.topic, event.message);
 		}
 	}
 }

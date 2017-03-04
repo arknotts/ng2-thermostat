@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 
 import { AppConfig, APP_CONFIG } from '../app.config';
 import { ThermostatMode } from '../../../common/thermostatMode';
-import { IThermostatEvent, ThermostatEventType, ThermostatTopic } from '../../../common/thermostatEvent';
+import { IThermostatEvent, ThermostatEventType, THERMOSTAT_TOPIC } from '../../../common/thermostatEvent';
 
 @Injectable()
 export class ThermostatService {
@@ -13,6 +13,7 @@ export class ThermostatService {
 	events$: Observable<IThermostatEvent>;
 
 	temperature$: Observable<number>;
+	humidity$: Observable<number>;
 	target$: Observable<number>;
 	status$: Observable<string>;
 	error$: Observable<string>;
@@ -27,13 +28,16 @@ export class ThermostatService {
 			this.socket.on('message', (message) => observer.next(message));
 		});
 
-		this.temperature$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Temperature))
+		this.temperature$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Temperature))
+										.map((event: IThermostatEvent): number => parseFloat(event.message.temperature));
+
+		this.humidity$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Temperature))
+										.map((event: IThermostatEvent): number => parseFloat(event.message.humidity));
+
+		this.target$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Target))
 										.map((event: IThermostatEvent): number => parseFloat(event.message));
 
-		this.target$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Target))
-										.map((event: IThermostatEvent): number => parseFloat(event.message));
-
-		this.status$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, ThermostatTopic.Status))
+		this.status$ = this.events$.filter((event: IThermostatEvent) => _.isEqual(event.topic, THERMOSTAT_TOPIC.Status))
 									.map((event: IThermostatEvent): string => event.message);
 							
 		this.error$ = this.events$.filter((event: IThermostatEvent) => event.type == ThermostatEventType.Error)
@@ -54,5 +58,13 @@ export class ThermostatService {
 		this.socket.emit('/mode', {
 			mode: mode
 		});
+	}
+
+	startFan() {
+		this.socket.emit('/fan', 'start');
+	}
+
+	stopFan() {
+		this.socket.emit('/fan', 'stop');
 	}
 }

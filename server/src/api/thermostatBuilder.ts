@@ -1,8 +1,8 @@
 import { Thermostat } from '../core/thermostat';
 import { IThermostatConfiguration } from '../core/configuration';
-import { ITempSensor, Dht11TempSensor } from '../core/tempSensor';
+import { ITempSensor, Dht22TempSensor } from '../core/tempSensor';
 import { ITempReader, MovingAverageTempReader } from '../core/tempReader';
-import { ITrigger, PiGpioTrigger, AcTrigger } from '../core/trigger';
+import { ITrigger, PiGpioTrigger } from '../core/trigger';
 
 import { IPinConfiguration } from '../api/configuration';
 
@@ -24,23 +24,26 @@ export class ThermostatBuilder {
 		let tempReader: ITempReader;
 		let furnaceTrigger: ITrigger;
 		let acTrigger: ITrigger;
+		let fanTrigger: ITrigger;
 
-		if(type.toLowerCase() == 'rest') {
-			tempSensor = new Dht11TempSensor(this._thermostatConfiguration.tempSensorPollDelay, this._pinConfiguration.tempSensor);
+		if(type.toLowerCase() === 'rest') {
+			tempSensor = new Dht22TempSensor(this._thermostatConfiguration.tempSensorPollDelay, this._pinConfiguration.tempSensor);
 			tempReader = new MovingAverageTempReader(tempSensor, 5);
 			furnaceTrigger = new PiGpioTrigger(this._pinConfiguration.furnaceTrigger);
-			acTrigger = new AcTrigger();
+			acTrigger = new PiGpioTrigger(this._pinConfiguration.acTrigger);
+			fanTrigger = new PiGpioTrigger(this._pinConfiguration.fanTrigger);
 		}
-		else if(type.toLowerCase() == 'sim') {
+		else if(type.toLowerCase() === 'sim') {
 			tempSensor = new SimTempSensor(this._thermostatConfiguration.tempSensorPollDelay, -.2, 70);
 			tempReader = new MovingAverageTempReader(tempSensor, 3);
 			furnaceTrigger = new SimTrigger(<SimTempSensor>tempSensor);
 			acTrigger = new SimTrigger(<SimTempSensor>tempSensor);
+			fanTrigger = new SimTrigger();
 		}
 		else {
 			throw `Unknown thermostat type '${type}'`;
 		}
 
-		return new Thermostat(this._thermostatConfiguration, tempReader, furnaceTrigger, acTrigger);
+		return new Thermostat(this._thermostatConfiguration, tempReader, furnaceTrigger, acTrigger, fanTrigger);
 	}
 }

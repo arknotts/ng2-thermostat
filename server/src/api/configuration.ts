@@ -7,7 +7,7 @@ export interface IServerConfiguration {
 	type: string;
 }
 
-export interface IBroadcasterConfiguration {
+export interface IIoTBridgeConfiguration {
 	type: string;
 	brokerUrl: string;
 	username: string;
@@ -28,20 +28,24 @@ export interface IScheduleConfiguration {
 export interface IPinConfiguration {
 	tempSensor: number;
 	furnaceTrigger: number;
+	acTrigger: number;
+	fanTrigger: number;
 }
 
 export interface IConfiguration {
 	server: IServerConfiguration;
 	pins: IPinConfiguration;
 	thermostat: IThermostatConfiguration;
-	broadcaster: IBroadcasterConfiguration;
+	iotBridge: IIoTBridgeConfiguration;
 	schedule: IScheduleConfiguration;
 }
 
 export class Configuration {
 	static Load(filePath: string, onLoad: {(configuration: IConfiguration)}) {
 		fs.readFile(filePath, (err, data) => {
-			if(err) throw err;
+			if(err) {
+				throw err;
+			} 
 
 			let configuration: IConfiguration = JSON.parse(<any>data);
 			onLoad(configuration);
