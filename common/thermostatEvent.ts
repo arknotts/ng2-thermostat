@@ -12,6 +12,7 @@ class ThermostatTopic {
 	readonly ModeSet = 'thermostat/mode/set';
 	readonly Status = 'thermostat/status';
 	readonly Furnace = 'thermostat/furnace';
+	readonly Fan = 'thermostat/fan';
 	readonly Ac = 'thermostat/ac';
 	readonly Error = 'thermostat/error';
 

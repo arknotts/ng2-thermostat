@@ -156,6 +156,14 @@ export class ThermostatServer {
 		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.ModeSet) {
 			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message.mode));
 		}
+		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.Fan) {
+			if(thermostatEvent.message.fan === 'start') {
+				this._thermostat.startFan();
+			}
+			else {
+				this._thermostat.stopFan();
+			}
+		}
 	}
 
 	private emitEvent(socket: SocketIO.Socket, topic: string, message: any) {

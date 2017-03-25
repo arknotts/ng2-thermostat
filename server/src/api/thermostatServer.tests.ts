@@ -224,6 +224,28 @@ describe('Thermostat Server Spec', () => {
 		sinon.assert.calledWith(<any>mockThermostat.setMode, incomingMode.toString());
 	});
 
+	it('should start and stop fan when message received from iot bridge', () => {
+		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
+			topic: THERMOSTAT_TOPIC.Fan,
+			type: ThermostatEventType.Message,
+			message: {
+				fan: 'start'
+			}
+		});
+
+		sinon.assert.called(<any>mockThermostat.startFan);
+
+		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
+			topic: THERMOSTAT_TOPIC.Fan,
+			type: ThermostatEventType.Message,
+			message: {
+				fan: 'stop'
+			}
+		});
+
+		sinon.assert.called(<any>mockThermostat.stopFan);
+	});
+
 	it('should emit latest thermostat values on new socket connection', () => {
 		let temperature = 73;
 		mockEventStream.next({ //need to push a temperature through before we can get it back out
