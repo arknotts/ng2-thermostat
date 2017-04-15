@@ -87,7 +87,7 @@ export class Thermostat implements IThermostat {
 
     private tempReceived(temperature: number) {
         if(this.mode === ThermostatMode.Heating) {
-            if(temperature < this.target - 1) {
+            if(temperature <= this.target - this.configuration.deadZone) {
                 this.tryStartTrigger(temperature);
             }
             else if(temperature >= this.target + this._targetOvershootBy) {
@@ -95,7 +95,7 @@ export class Thermostat implements IThermostat {
             }
         }
         else { //cooling
-            if(temperature > this.target + 1) {
+            if(temperature >= this.target + this.configuration.deadZone) {
                 this.tryStartTrigger(temperature);
             }
             else if(temperature <= this.target - this._targetOvershootBy) {

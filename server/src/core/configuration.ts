@@ -7,6 +7,7 @@ export interface IThermostatConfiguration {
     minDelayBetweenRuns: number;
 	tempEmitDelay: number;
     tempSensorPollDelay: number;
+	deadZone: number;
 }
 
 export class ThermostatConfiguration implements IThermostatConfiguration {
@@ -18,7 +19,8 @@ export class ThermostatConfiguration implements IThermostatConfiguration {
                 public maxRunTime: number,
                 public minDelayBetweenRuns: number,
                 public tempSensorPollDelay: number,
-                public tempEmitDelay: number) {
+                public tempEmitDelay: number,
+				public deadZone: number) {
 
     }
 }

@@ -35,7 +35,7 @@ describe('Thermostat Unit Tests:', () => {
         heatingRange = [55,75];
         coolingRange = [68,80];
 
-		cfg = cfgOverride || new ThermostatConfiguration(heatingRange, coolingRange, "Heating", 1, 2000, 5, tickDelay, 5000);
+		cfg = cfgOverride || new ThermostatConfiguration(heatingRange, coolingRange, "Heating", 1, 2000, 5, tickDelay, 5000, 2);
 
         tempSensor = new MockTempSensor(tickDelay);
         tempRdr = new MovingAverageTempReader(tempSensor, windowSize);
@@ -123,7 +123,7 @@ describe('Thermostat Unit Tests:', () => {
 			});
 
 			it('should default to mode specified in configuration', (done) => {
-				let thisCfg = new ThermostatConfiguration(heatingRange, coolingRange, "Heating", 1, 2000, 5, tickDelay, 5000);
+				let thisCfg = new ThermostatConfiguration(heatingRange, coolingRange, "Heating", 1, 2000, 5, tickDelay, 5000, 2);
 				buildThermostat(null, thisCfg);
 				expect(thermostat.mode).to.equal(ThermostatMode.Heating);
 
@@ -156,25 +156,31 @@ describe('Thermostat Unit Tests:', () => {
 	describe('furnace spec', () => {
 		describe('temperature dropping below target', () => {
 			it('should start furnace', (done) => {
-				let temperature$ = Rx.Observable.from([72,71,70,69,68]).map(x => <ITempResult>{ temperature: x });
-				thermostat.setTarget(70);
+				let temperatures = [72,71,70,69,68,67,66];
+				let temperature$ = new Rx.Subject<ITempResult>();
+				let target = 70;
+				thermostat.setTarget(target);
+				let shouldTurnOnAtTemperature = Math.floor(target - cfg.deadZone);
 
 				sinon.stub(tempRdr, "start", () => temperature$);
-
-				let startCalled: boolean = false;
-				sinon.stub(furnaceTrigger, "start", () => {
-					startCalled = true;
-				});
-
+				furnaceTrigger.start = sinon.spy();
 				thermostat.start();
 
-				temperature$.subscribe(
-					null, null,
-					() => {
-						expect(startCalled).to.be.true;
+				while(temperatures.length) {
+					let temperature = temperatures.shift();
+					temperature$.next({temperature: temperature});
+
+					if(temperature == shouldTurnOnAtTemperature) {
+						sinon.assert.calledOnce(<sinon.SinonSpy>furnaceTrigger.start);
 						done();
+						break;
 					}
-				);
+					else {
+						sinon.assert.notCalled(<sinon.SinonSpy>furnaceTrigger.start);
+					}
+				}
+
+				temperature$.complete();
 			});
 		});
 
@@ -297,13 +303,31 @@ describe('Thermostat Unit Tests:', () => {
 
 		describe('temperature rising above target', () => {
 			it('should start air conditioner', (done) => {
-				let temperatureValues = [69,70,71,72];
-				thermostat.setTarget(70);
+				let temperatures = [66,67,68,69,70,71,72];
+				let temperature$ = new Rx.Subject<ITempResult>();
+				let target = 70;
+				thermostat.setTarget(target);
+				let shouldTurnOnAtTemperature = Math.floor(target + cfg.deadZone);
 
-				sinon.stub(tempRdr, "start", () => Rx.Observable.from(temperatureValues));
-				sinon.stub(acTrigger, "start", done());
-
+				sinon.stub(tempRdr, "start", () => temperature$);
+				acTrigger.start = sinon.spy();
 				thermostat.start();
+
+				while(temperatures.length) {
+					let temperature = temperatures.shift();
+					temperature$.next({temperature: temperature});
+
+					if(temperature == shouldTurnOnAtTemperature) {
+						sinon.assert.calledOnce(<sinon.SinonSpy>acTrigger.start);
+						done();
+						break;
+					}
+					else {
+						sinon.assert.notCalled(<sinon.SinonSpy>acTrigger.start);
+					}
+				}
+
+				temperature$.complete();
 			});
 		});
 
