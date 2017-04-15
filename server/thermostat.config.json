@@ -17,7 +17,8 @@
 		"maxRunTime": 1800000,
 		"minDelayBetweenRuns": 600000,
 		"tempEmitDelay": 300000,
-		"tempSensorPollDelay": 5000
+		"tempSensorPollDelay": 5000,
+		"deadZone": 0.5
 	},
 	"iotBridge": {
 		"type": "mqtt",
