@@ -79,6 +79,11 @@ export class ThermostatServer {
 				action: event.message
 			};
 		}
+		else if(event.topic == THERMOSTAT_TOPIC.Fan) {
+			return {
+				fan: event.message
+			};
+		}
 		else if(event.topic == THERMOSTAT_TOPIC.Ac) {
 			return {
 				action: event.message

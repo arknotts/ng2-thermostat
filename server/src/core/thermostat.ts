@@ -145,10 +145,12 @@ export class Thermostat implements IThermostat {
 
     startFan() {
         this._fanTrigger.start();
+        this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Fan, 'start');
     }
 
     stopFan() {
         this._fanTrigger.stop();
+        this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Fan, 'stop');
     }
 
     setMode(mode: ThermostatMode) {
