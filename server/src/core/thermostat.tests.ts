@@ -151,8 +151,7 @@ describe('Thermostat Unit Tests:', () => {
 			});
 		});
 	});
-    
-    
+        
 	describe('furnace spec', () => {
 		describe('temperature dropping below target', () => {
 			it('should start furnace', (done) => {
@@ -295,7 +294,6 @@ describe('Thermostat Unit Tests:', () => {
 		});
 	});
 
-
 	describe('air conditioning spec', () => {
 		beforeEach(() => {
 			thermostat.setMode(ThermostatMode.Cooling);
@@ -403,7 +401,6 @@ describe('Thermostat Unit Tests:', () => {
 			});
 		});
 	});
-
 
 	describe('failsafe spec', () => {
 		describe('furnace running for longer than max run time', () => {
@@ -545,7 +542,6 @@ describe('Thermostat Unit Tests:', () => {
 		});
 	});
 
-
 	describe('event spec', () => {
 
 		describe('when furnace trigger is started, it', () => {
@@ -674,6 +670,62 @@ describe('Thermostat Unit Tests:', () => {
 
 				done();
 			});
+		});
+	});
+
+	describe('mode spec', () => {
+		describe('when switching to cooling, it', () => {
+			it('should stop the furnace trigger first', (done) => {
+				buildRunningThermostat(ThermostatMode.Heating).subscribe((runningThermostat) => {
+					furnaceTrigger.stop = sinon.spy();
+
+					runningThermostat.setMode(ThermostatMode.Cooling);
+
+					sinon.assert.calledOnce(<sinon.SinonSpy>furnaceTrigger.stop);
+					done();
+				});
+			});
+		});
+
+		describe('when switching to heating, it', () => {
+			it('should stop the A/C trigger first', (done) => {
+				buildRunningThermostat(ThermostatMode.Cooling).subscribe((runningThermostat) => {
+					acTrigger.stop = sinon.spy();
+
+					runningThermostat.setMode(ThermostatMode.Heating);
+
+					sinon.assert.calledOnce(<sinon.SinonSpy>acTrigger.stop);
+					done();
+				});
+			});
+		});
+
+		it('should not start furnace when mode is set to off', (done) => {
+			furnaceTrigger.start = sinon.spy();
+			let temperature$ = new Rx.Subject<ITempResult>();
+			sinon.stub(tempRdr, "start", () => temperature$);
+			thermostat.setMode(ThermostatMode.Off);
+			thermostat.setTarget(70);
+			
+			thermostat.start();
+			temperature$.next({temperature: 60});
+
+			sinon.assert.notCalled(<sinon.SinonSpy>furnaceTrigger.start);
+			done();
+		});
+
+		it('should not start A/C when mode is set to off', (done) => {
+			acTrigger.start = sinon.spy();
+			let temperature$ = new Rx.Subject<ITempResult>();
+			sinon.stub(tempRdr, "start", () => temperature$);
+			thermostat.setMode(ThermostatMode.Off);
+			thermostat.setTarget(70);
+			
+			thermostat.start();
+			temperature$.next({temperature: 80});
+
+			sinon.assert.notCalled(<sinon.SinonSpy>acTrigger.start);
+			done();
 		});
 	});
 });

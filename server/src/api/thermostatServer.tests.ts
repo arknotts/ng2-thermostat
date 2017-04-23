@@ -226,7 +226,7 @@ describe('Thermostat Server Spec', () => {
 
 	it('should start and stop fan when message received from iot bridge', () => {
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
-			topic: THERMOSTAT_TOPIC.Fan,
+			topic: THERMOSTAT_TOPIC.FanSet,
 			type: ThermostatEventType.Message,
 			message: {
 				fan: 'start'
@@ -236,7 +236,7 @@ describe('Thermostat Server Spec', () => {
 		sinon.assert.called(<any>mockThermostat.startFan);
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
-			topic: THERMOSTAT_TOPIC.Fan,
+			topic: THERMOSTAT_TOPIC.FanSet,
 			type: ThermostatEventType.Message,
 			message: {
 				fan: 'stop'

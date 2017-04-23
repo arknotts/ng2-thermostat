@@ -156,7 +156,7 @@ export class ThermostatServer {
 		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.ModeSet) {
 			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message.mode));
 		}
-		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.Fan) {
+		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.FanSet) {
 			if(thermostatEvent.message.fan === 'start') {
 				this._thermostat.startFan();
 			}

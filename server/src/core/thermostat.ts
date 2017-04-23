@@ -94,7 +94,7 @@ export class Thermostat implements IThermostat {
                 this.stopTrigger();
             }
         }
-        else { //cooling
+        else if(this.mode === ThermostatMode.Cooling) {
             if(temperature >= this.target + this.configuration.deadZone) {
                 this.tryStartTrigger(temperature);
             }
@@ -151,11 +151,22 @@ export class Thermostat implements IThermostat {
         this._fanTrigger.stop();
     }
 
-	//TODO turn current trigger off before switching modes
     setMode(mode: ThermostatMode) {
+		this.stopTrigger();
+		switch(mode) {
+			case ThermostatMode.Heating:
+				this._currentTrigger = this._furnaceTrigger;
+				break;
+			case ThermostatMode.Cooling:
+				this._currentTrigger = this._acTrigger;
+				break;
+			case ThermostatMode.Off:
+				this._currentTrigger = null;
+		}
+
         this.mode = mode;
         this.setTarget(this.defaultTarget);
-        this._currentTrigger = mode === ThermostatMode.Heating ? this._furnaceTrigger : this._acTrigger;
+        
 		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Mode, mode.toString());
     }
 
