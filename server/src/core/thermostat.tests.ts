@@ -651,6 +651,38 @@ describe('Thermostat Unit Tests:', () => {
 			});
 		});
 
+		describe('when fan is started, it', () => {
+			it('should emit a fan start message', (done) => {
+
+				buildThermostat();
+
+				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
+					if(e.topic === 'thermostat/fan') {
+						expect(e.message).to.equal('start');
+						done();
+					}
+				}); 
+				
+				thermostat.startFan();
+			});
+		});
+
+		describe('when fan is started, it', () => {
+			it('should emit a fan start message', (done) => {
+
+				buildThermostat();
+
+				thermostat.eventStream.subscribe((e: IThermostatEvent) => {
+					if(e.topic === 'thermostat/fan') {
+						expect(e.message).to.equal('stop');
+						done();
+					}
+				}); 
+				
+				thermostat.stopFan();
+			});
+		});
+
 		describe('when target is set to the current value, it', () => {
 			it('should not emit a "target changed" message', (done) => {
 				clock = sinon.useFakeTimers();

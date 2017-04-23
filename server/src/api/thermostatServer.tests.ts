@@ -171,6 +171,34 @@ describe('Thermostat Server Spec', () => {
 		});
 	});
 
+	it('should broadcast thermostat fan start events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: THERMOSTAT_TOPIC.Fan,
+			message: 'start'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
+			fan: event.message
+		});
+	});
+
+	it('should broadcast thermostat fan stop events as an object', () => {
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: THERMOSTAT_TOPIC.Fan,
+			message: 'stop'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledOnce(<any>mockIoTBridge.broadcast);
+		sinon.assert.calledWith(<any>mockIoTBridge.broadcast, event.topic, {
+			fan: event.message
+		});
+	});
+
 	it('should broadcast thermostat AC events as an object', () => {
 		let event: IThermostatEvent = {
 			type: ThermostatEventType.Message,
