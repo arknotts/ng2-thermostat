@@ -159,7 +159,7 @@ export class ThermostatServer {
 			this._thermostat.setTarget(parseInt(thermostatEvent.message.target));
 		}
 		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.ModeSet) {
-			this._thermostat.setMode(<ThermostatMode>(<any>thermostatEvent.message.mode));
+			this._thermostat.setMode(ThermostatMode[<string>thermostatEvent.message.mode]);
 		}
 		else if(thermostatEvent.topic == THERMOSTAT_TOPIC.FanSet) {
 			if(thermostatEvent.message.fan === 'start') {

@@ -164,6 +164,12 @@ export class Thermostat implements IThermostat {
 				break;
 			case ThermostatMode.Off:
 				this._currentTrigger = null;
+				break;
+			default:
+				this.emitEvent(ThermostatEventType.Message, 
+							THERMOSTAT_TOPIC.Error, 
+							`Unknown mode received: ${mode}`);
+				return;
 		}
 
         this.mode = mode;

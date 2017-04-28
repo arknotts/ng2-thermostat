@@ -227,9 +227,8 @@ describe('Thermostat Server Spec', () => {
 		});
 	});
 
-	it('should listen to the iot bridge and forward messages to thermostat', () => {
+	it('should listen to the iot bridge and forward target messages to thermostat', () => {
 		let incomingTarget = 74;
-		let incomingMode = ThermostatMode.Cooling;
 
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
 			topic: THERMOSTAT_TOPIC.TargetSet,
@@ -240,16 +239,18 @@ describe('Thermostat Server Spec', () => {
 		});
 
 		sinon.assert.calledWith(<any>mockThermostat.setTarget, incomingTarget);
+	});
 
+	it('should listen to the iot bridge and forward mode messages to thermostat', () => {
 		(<Subject<IThermostatEvent>>mockIoTBridge.events$).next({
 			topic: THERMOSTAT_TOPIC.ModeSet,
 			type: ThermostatEventType.Message,
 			message: {
-				mode: incomingMode.toString()
+				mode: "Cooling"
 			}
 		});
 
-		sinon.assert.calledWith(<any>mockThermostat.setMode, incomingMode.toString());
+		sinon.assert.calledWith(<any>mockThermostat.setMode, ThermostatMode.Cooling);
 	});
 
 	it('should start and stop fan when message received from iot bridge', () => {
