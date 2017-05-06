@@ -35,6 +35,11 @@ export class ThermostatServer {
 			if(event.topic === THERMOSTAT_TOPIC.Temperature) {
 				this.lastTemperatureMessage = event.message;
 			}
+
+			if(event.topic === THERMOSTAT_TOPIC.Mode) {
+				//need to change heating/cooling schedules when mode changes
+				this.initScheduler();
+			}
 		});
 
 		if(this._iotBridge) {
@@ -46,14 +51,18 @@ export class ThermostatServer {
 
 		this._thermostat.start();
 
-		if(this._scheduler) {
-			this._scheduler.initSchedule((temperature) => {
-				this._thermostat.setTarget(temperature);
-			});
-		}
+		this.initScheduler();
 
 		console.log('Server started!');
     }
+
+	private initScheduler() {
+		if(this._scheduler) {
+			this._scheduler.initSchedule(this._thermostat.mode, (temperature) => {
+				this._thermostat.setTarget(temperature);
+			});
+		}
+	}
 
 	private buildMessageFromEvent(event: IThermostatEvent): any {
 		if(event.topic == THERMOSTAT_TOPIC.Temperature) {

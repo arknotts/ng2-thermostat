@@ -19,10 +19,15 @@ export interface IScheduleItem {
 	temperature: number;
 }
 
-export interface IScheduleConfiguration {
-	timezone: string;
+export interface IWeeklySchedule {
 	weekdays: Array<IScheduleItem>;
 	weekends: Array<IScheduleItem>;
+}
+
+export interface IScheduleConfiguration {
+	timezone: string;
+	heating: IWeeklySchedule;
+	cooling: IWeeklySchedule;	
 }
 
 export interface IPinConfiguration {

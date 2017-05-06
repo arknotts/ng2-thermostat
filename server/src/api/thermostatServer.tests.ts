@@ -74,7 +74,7 @@ describe('Thermostat Server Spec', () => {
 
 		onScheduleCallback = sinon.spy();
 		mockScheduler = {
-			initSchedule: (callback) => {
+			initSchedule: (mode: ThermostatMode, callback) => {
 				onScheduleCallback = callback;
 			}
 		};
@@ -344,5 +344,20 @@ describe('Thermostat Server Spec', () => {
 		mockSocketEvents.find((event) => event.key === '/mode').callback({mode: mode});
 
 		sinon.assert.calledWith(<any>mockThermostat.setMode, mode);
+	});
+
+	it('should re-initialize scheduler when thermostat emits a mode change event', () => {
+		mockThermostat.mode = ThermostatMode.Cooling;
+		mockScheduler.initSchedule = sinon.spy();
+
+		let event: IThermostatEvent = {
+			type: ThermostatEventType.Message,
+			topic: THERMOSTAT_TOPIC.Mode,
+			message: 'heating'
+		};
+		mockEventStream.next(event);
+
+		sinon.assert.calledWith(<any>mockScheduler.initSchedule,
+								ThermostatMode.Cooling);
 	});
 });
