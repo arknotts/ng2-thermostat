@@ -28,15 +28,28 @@
 	},
 	"schedule": {
 		"timezone": "America/New_York",
-		"weekdays": [
-			{ "time": "6:00", "temperature": 68 },
-			{ "time": "7:30", "temperature": 63 },
-			{ "time": "16:00", "temperature": 68 },
-			{ "time": "22:00", "temperature": 63 }
-		],
-		"weekends": [
-			{ "time": "7:00", "temperature": 68 },
-			{ "time": "22:00", "temperature": 63 }
-		]
+		"heating": {
+			"weekdays": [
+				{ "time": "6:00", "temperature": 68 },
+				{ "time": "7:30", "temperature": 63 },
+				{ "time": "16:00", "temperature": 68 },
+				{ "time": "22:00", "temperature": 63 }
+			],
+			"weekends": [
+				{ "time": "7:00", "temperature": 68 },
+				{ "time": "22:00", "temperature": 63 }
+			]
+		},
+		"cooling": {
+			"weekdays": [
+				{ "time": "6:00", "temperature": 78 },
+				{ "time": "16:00", "temperature": 74 },
+				{ "time": "22:00", "temperature": 76 }
+			],
+			"weekends": [
+				{ "time": "7:00", "temperature": 74 },
+				{ "time": "22:00", "temperature": 78 }
+			]
+		}
 	}
 }
