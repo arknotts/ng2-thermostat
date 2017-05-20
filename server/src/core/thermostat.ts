@@ -175,7 +175,7 @@ export class Thermostat implements IThermostat {
         this.mode = mode;
         this.setTarget(this.defaultTarget);
         
-		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Mode, mode.toString());
+		this.emitEvent(ThermostatEventType.Message, THERMOSTAT_TOPIC.Mode, ThermostatMode[mode]);
     }
 
     private targetIsWithinBounds(target: number) {
